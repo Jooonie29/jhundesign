@@ -1,0 +1,1402 @@
+<html lang="en" class="scroll-smooth"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jhunly | Visual Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: {
+                    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                },
+                extend: {
+                    colors: {
+                        glass: {
+                            100: 'rgba(255, 255, 255, 0.6)',
+                            200: 'rgba(255, 255, 255, 0.8)',
+                        }
+                    },
+                    animation: {
+                        'tilt': 'tilt 10s infinite linear',
+                    },
+                    keyframes: {
+                        tilt: {
+                            '0%, 50%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(1deg)' },
+                            '75%': { transform: 'rotate(-1deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #111827;
+            cursor: default;
+        }
+
+        /* Aura Background adjustments for blend */
+        .aura-background-component {
+            opacity: 1; 
+            mix-blend-mode: normal;
+            pointer-events: none;
+        }
+
+        /* Glass Utilities - Light Mode */
+        .glass {
+            background: #ffffff;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+        }
+
+        .dock-container {
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 { letter-spacing: -0.03em; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        /* Dock Animation */
+        .dock-icon {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), margin 0.2s;
+            transform-origin: bottom center;
+        }
+        .dock-icon:hover {
+            transform: scale(1.15) translateY(-8px);
+            margin: 0 6px;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.8s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        /* Selection */
+        ::selection { background: rgba(59, 130, 246, 0.2); color: #000; }
+        .liquid-glass {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff, #fefefe);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 0 6px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.25), inset -3px -3px 0.5px -3px rgba(255,255,255,0.18), inset 1px 1px 1px -0.5px rgba(255,255,255,0.35), inset -1px -1px 1px -0.5px rgba(255,255,255,0.2), inset 0 0 6px 6px rgba(255,255,255,0.06), inset 0 0 2px 2px rgba(255,255,255,0.03), 0 0 12px rgba(0,0,0,0.1);
+            transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+        }
+        .liquid-glass::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent 60%);
+        }
+        .liquid-glass-button { 
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.2), inset -3px -3px 0.5px -3px rgba(255,255,255,0.1), inset 1px 1px 1px -0.5px rgba(255,255,255,0.25), inset -1px -1px 1px -0.5px rgba(255,255,255,0.15);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .liquid-glass-button:hover { transform: translateY(-1px) scale(1.015); box-shadow: 0 8px 16px rgba(0,0,0,0.10); border-color: rgba(255,255,255,0.24); background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08)); }
+        .liquid-glass-button:active { transform: translateY(0) scale(0.98); }
+        .hello-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%); }
+        .hello-overlay::before { content: ""; position: absolute; inset: 0; background:
+            radial-gradient(600px 400px at 20% 20%, rgba(99,102,241,0.20), transparent 60%),
+            radial-gradient(700px 500px at 80% 30%, rgba(168,85,247,0.18), transparent 60%),
+            radial-gradient(600px 400px at 30% 80%, rgba(59,130,246,0.18), transparent 60%);
+            filter: blur(10px);
+        }
+        .hello-svg { width: min(80vw, 900px); height: auto; }
+        .hello-text { font-family: 'Pacifico', cursive; fill: transparent; stroke: white; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-opacity: 0.95; stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: hello-draw 2.2s linear forwards, hello-fill 0.8s ease 2.2s forwards; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15)); }
+        @keyframes hello-draw { to { stroke-dashoffset: 0; } }
+        @keyframes hello-fill { to { fill: white; } }
+        .hello-overlay.fade-out { animation: overlay-out 0.8s ease forwards; }
+        @keyframes overlay-out { to { opacity: 0; visibility: hidden; } }
+        @keyframes blob1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px,-25px) scale(1.06); } }
+        @keyframes blob2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px,15px) scale(1.04); } }
+        @keyframes blob3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(10px,20px) scale(1.05); } }
+        .animate-blob-1 { animation: blob1 26s ease-in-out infinite; }
+        .animate-blob-2 { animation: blob2 32s ease-in-out infinite; }
+        .animate-blob-3 { animation: blob3 28s ease-in-out infinite; }
+        .dock-icon, .dock-icon * { padding: 0; margin: 0; box-sizing: border-box; }
+        .dock-icon > div { position: relative; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.20); }
+        .dock-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .dock-tooltip { position: absolute; left: 50%; bottom: calc(100% + 35px); transform: translateX(-50%) translateY(-2px); z-index: 300; opacity: 0; transition: opacity 260ms ease, transform 260ms ease; pointer-events: none; will-change: opacity, transform; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+        .dock-icon:hover .dock-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .collage { --kenburns-duration: 7s; }
+        .collage-layer { position: absolute; inset: 0; opacity: 0; transition: opacity 800ms ease; will-change: transform, opacity; }
+        .collage-layer.active { opacity: 1; }
+        .collage-layer img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.06) translateZ(0); animation: kenburns var(--kenburns-duration) ease-in-out infinite alternate; }
+        .collage.paused .collage-layer img { animation-play-state: paused; }
+        @keyframes kenburns { 0% { transform: scale(1.06) translate3d(-1.5%, -1.5%, 0); } 100% { transform: scale(1.12) translate3d(1.5%, 1.5%, 0); } }
+        .collage-control { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 10px; border-radius: 9999px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.08); color: #111; }
+        @media (prefers-reduced-motion: reduce) { .collage { display: none; } [data-collage-fallback] { display: block !important; } }
+        .scroll-thumb { position: absolute; inset: 0; overflow: hidden; }
+        .scroll-thumb::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 28px; background: linear-gradient(to bottom, rgba(0,0,0,0.22), rgba(0,0,0,0)); z-index: 5; pointer-events: none; }
+        .scroll-thumb::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 28px; background: linear-gradient(to top, rgba(0,0,0,0.22), rgba(0,0,0,0)); z-index: 5; pointer-events: none; }
+        .scroll-img { position: absolute; top: 0; left: 0; width: 100%; height: auto; transform: translate3d(0,0,0); will-change: transform; }
+        .scrolling .scroll-img { animation-name: scrollY; animation-duration: var(--scroll-duration, 4s); animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+        .group:hover .scroll-img { animation-play-state: paused; }
+        @keyframes scrollY { from { transform: translate3d(0,0,0); } to { transform: translate3d(0, var(--scroll-distance, -100px), 0); } }
+        @media (prefers-reduced-motion: reduce) { .scrolling .scroll-img { animation: none !important; transform: translate3d(0,0,0) !important; } }
+        .photos-window { 
+            background-color: rgba(255, 255, 255, 0.89);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 0 6px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.25), inset -3px -3px 0.5px -3px rgba(255,255,255,0.18), inset 1px 1px 1px -0.5px rgba(255,255,255,0.35), inset -1px -1px 1px -0.5px rgba(255,255,255,0.2), inset 0 0 6px 6px rgba(255,255,255,0.06), inset 0 0 2px 2px rgba(255,255,255,0.03), 0 0 12px rgba(0,0,0,0.1) }
+        .photos-sidebar { position: relative; border-right: 1px solid rgba(255,255,255,0.24); }
+        .photos-pill { transition: all 160ms ease; }
+        
+        .photos-list button { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
+        .photos-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.3) transparent; }
+        .photos-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+        .photos-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.3); border-radius: 6px; }
+        .photos-scroll::-webkit-scrollbar-track { background: transparent; }
+        .photos-window, .photos-scroll { overscroll-behavior: contain; }
+        .photos-scroll { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .photos-window .window-titlebar { backdrop-filter: blur(32px) saturate(180%); -webkit-backdrop-filter: blur(32px) saturate(180%); background-color: rgba(255, 255, 255, 0.096); transition: background-color 240ms ease; }
+        .photo-item { position: relative; overflow: hidden; border-radius: 12px; cursor: pointer; }
+        .photo-item:hover, .photo-item:focus { z-index: 3; overflow: visible; }
+        .photo-thumb { border-radius: 12px; will-change: transform; -webkit-transform: translateZ(0); transform: translateZ(0); -webkit-transform-origin: center center; transform-origin: center center; -webkit-backface-visibility: hidden; backface-visibility: hidden; opacity: 0.9; -webkit-transition: -webkit-transform 0.3s ease, opacity 0.3s ease; transition: transform 0.3s ease, opacity 0.3s ease; box-shadow: none; }
+        .photo-item:hover .photo-thumb, .photo-item:focus .photo-thumb { -webkit-transform: scale(1.05); transform: scale(1.05); opacity: 1; box-shadow: none; }
+        .photo-thumb.fade-click { -webkit-transition: opacity 400ms linear !important; transition: opacity 400ms linear !important; opacity: 0; }
+        #photosGrid { will-change: opacity, transform; -webkit-transform: translateZ(0); transform: translateZ(0); -webkit-transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 240ms cubic-bezier(0.4, 0, 0.2, 1); transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1), transform 240ms cubic-bezier(0.4, 0, 0.2, 1); }
+        #photosGrid.switching-out { opacity: 0; -webkit-transform: translateZ(0) scale(0.98); transform: translateZ(0) scale(0.98); }
+        #photosGrid.switching-in { opacity: 1; -webkit-transform: translateZ(0) scale(1); transform: translateZ(0) scale(1); }
+        #photosOverlay, #photosWindow { will-change: opacity, transform; transition-duration: 200ms !important; -webkit-transition-duration: 200ms !important; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; -webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; }
+        .thumb-wrap { position: relative; }
+        .thumb-skeleton { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.18), rgba(255,255,255,0.08)); background-size: 200% 100%; -webkit-animation: shimmer 1200ms ease-in-out infinite; animation: shimmer 1200ms ease-in-out infinite; border-radius: 12px; }
+        @-webkit-keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .photo-thumb { opacity: 0; }
+        .photo-thumb.loaded { opacity: 1; -webkit-transition: opacity 220ms ease; transition: opacity 220ms ease; }
+        .grid-spinner { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); border-top-color: transparent; -webkit-animation: spin 600ms linear infinite; animation: spin 600ms linear infinite; }
+        #gridLoading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; -webkit-transition: opacity 200ms ease-out; transition: opacity 200ms ease-out; }
+        #gridLoading.show { opacity: 1; }
+        @-webkit-keyframes spin { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+        @keyframes spin { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .photo-thumb { transition: none; } }
+        #photoViewerModal { backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); transition: backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+        html.scroll-locked, body.scroll-locked { overflow: hidden; }
+        .scroll-lock-transition { transition: padding-right 200ms ease; }
+    </style>
+  <script src="https://www.aura.build/FxFilter.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function(){
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('./sw.js').catch(function(){});
+      }
+      var swReady = false;
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){
+        navigator.serviceWorker.ready.then(function(){ swReady = true; try { upgradeGridToOptimized(); } catch(e){} });
+      }
+      var collages = document.querySelectorAll('.collage');
+      collages.forEach(function(el){
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var lowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
+        if(reduce || lowEnd){
+          el.style.display = 'none';
+          var fb = el.parentElement.querySelector('[data-collage-fallback]');
+          if(fb) fb.style.display = 'block';
+          return;
+        }
+        var visibleTime = parseInt(el.getAttribute('data-speed') || '5000', 10); // per-image display time
+        var transitionTime = parseInt(el.getAttribute('data-transition') || '800', 10); // fade duration
+        el.style.setProperty('--kenburns-duration', (visibleTime/1000)+'s');
+        var listAttr = el.getAttribute('data-images');
+        var base = el.getAttribute('data-base');
+        var prefix = base ? (base.replace(/\/$/, '') + '/') : './assets/';
+        var images = [];
+        if(listAttr){
+          images = listAttr.split(',').map(function(s){
+            s = s.trim();
+            if(/^https?:\/\//.test(s)) return s;
+            if(s.startsWith('./') || s.startsWith('/')) return s;
+            return prefix + s;
+          });
+        } else {
+          for(var i=1;i<=8;i++){ images.push(prefix + 'poster_'+String(i).padStart(2,'0')+'.jpg'); }
+        }
+        // Allow png variants if jpg missing; we attempt load and fallback
+        function setSrc(img, src){
+          img.loading='lazy';
+          img.decoding='async';
+          img.onerror=function(){ img.onerror=null; img.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'; };
+          var isGit = /raw\.githubusercontent\.com|cdn\.jsdelivr\.net/.test(src);
+          img.src = isGit ? src : (src + (src.indexOf('?')===-1 ? '?w=1440' : '&w=1440'));
+        }
+        var layers = el.querySelectorAll('.collage-layer img');
+        if(layers.length<2) return;
+        var activeLayer = 0, current = 0, timer;
+        // preload helper
+        function preload(src){ var p = new Image(); p.src = src; return (p.decode ? p.decode().catch(function(){}) : Promise.resolve()); }
+        function show(index){ setSrc(layers[activeLayer], images[index]); el.querySelectorAll('.collage-layer')[activeLayer].classList.add('active'); }
+        function hideOther(){ el.querySelectorAll('.collage-layer')[1-activeLayer].classList.remove('active'); }
+        function schedule(){ timer = setTimeout(step, visibleTime); }
+        function step(){
+          var nextIndex = (current + 1) % images.length;
+          var targetLayer = 1 - activeLayer;
+          preload(images[nextIndex]).then(function(){ setSrc(layers[targetLayer], images[nextIndex]); });
+          // start fade
+          el.querySelectorAll('.collage-layer')[targetLayer].classList.add('active');
+          el.querySelectorAll('.collage-layer')[activeLayer].classList.remove('active');
+          activeLayer = targetLayer;
+          current = nextIndex;
+          setTimeout(function(){ schedule(); }, transitionTime);
+        }
+        show(current); preload(images[(current+1)%images.length]).then(function(){ setSrc(layers[1], images[1]); }); hideOther(); schedule();
+        var btn = el.querySelector('.collage-control');
+        if(btn){
+          var playing = true;
+          btn.addEventListener('click', function(){
+            playing = !playing;
+            btn.textContent = playing ? 'Pause' : 'Play';
+            btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+            btn.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Play slideshow');
+            if(!playing){ clearTimeout(timer); }
+            else { schedule(); }
+          });
+        }
+        // Pause on hover/focus
+        el.addEventListener('mouseenter', function(){ clearTimeout(timer); el.classList.add('paused'); });
+        el.addEventListener('mouseleave', function(){ if(btn && btn.getAttribute('aria-pressed')==='true'){ el.classList.remove('paused'); schedule(); } });
+        el.addEventListener('focusin', function(){ clearTimeout(timer); el.classList.add('paused'); });
+        el.addEventListener('focusout', function(){ if(btn && btn.getAttribute('aria-pressed')==='true'){ el.classList.remove('paused'); schedule(); } });
+        // Keyboard controls
+        el.addEventListener('keydown', function(e){
+          if(e.code==='Space'){ e.preventDefault(); btn && btn.click(); }
+          if(e.code==='ArrowRight'){ clearTimeout(timer); step(); }
+          if(e.code==='ArrowLeft'){
+            clearTimeout(timer);
+            // go back one image
+            current = (current - 1 + images.length) % images.length;
+            var targetLayer = 1 - activeLayer;
+            preload(images[current]).then(function(){ setSrc(layers[targetLayer], images[current]); });
+            el.querySelectorAll('.collage-layer')[targetLayer].classList.add('active');
+            el.querySelectorAll('.collage-layer')[activeLayer].classList.remove('active');
+            activeLayer = targetLayer;
+            setTimeout(function(){ schedule(); }, transitionTime);
+          }
+        });
+      });
+      var toggles = document.querySelectorAll('.case-toggle');
+      toggles.forEach(function(btn){
+        var panelId = btn.getAttribute('aria-controls');
+        var panel = panelId ? document.getElementById(panelId) : null;
+        if(!panel) return;
+        btn.addEventListener('click', function(){
+          var open = btn.getAttribute('aria-expanded') === 'true';
+          var next = (!open).toString();
+          btn.setAttribute('aria-expanded', next);
+          panel.classList.toggle('hidden', open);
+          document.querySelectorAll('.case-toggle[aria-controls="'+panelId+'"]').forEach(function(sib){ if(sib!==btn) sib.setAttribute('aria-expanded', next); });
+        });
+      });
+
+      var assetBase = document.body.getAttribute('data-asset-base');
+      if(assetBase){
+        var ab = assetBase.replace(/\/$/, '');
+        document.querySelectorAll('img[src^="./assets/"]').forEach(function(img){
+          var original = img.getAttribute('src');
+          var file = original.replace(/^\.\/assets\//, '');
+          img.onerror = function(){ img.onerror=null; img.src = original; };
+          img.src = ab + '/' + file;
+        });
+      }
+      var photos = [
+        { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_01.jpg', title: 'Poster 01', date: '2025-06-01' },
+        { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_02.jpg', title: 'Poster 02', date: '2025-06-02' },
+        { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_03.jpg', title: 'Poster 03', date: '2025-06-03' },
+        { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_04.jpg', title: 'Poster 04', date: '2025-06-04' },
+        { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/project_01.png', title: 'Website Long Shot', date: '2025-11-25' }
+      ];
+      var defaultPhotos = photos.slice();
+      var overlay = document.getElementById('photosOverlay');
+      var windowEl = document.getElementById('photosWindow');
+      var gridEl = document.getElementById('photosGrid');
+      var photosCount = document.getElementById('photosCount');
+      var opener = document.querySelector('[data-app="photos"]');
+      var closeBtn = document.getElementById('photosClose');
+      var minimizeBtn = document.getElementById('photosMinimize');
+      var maximizeBtn = document.getElementById('photosMaximize');
+      var modal = document.getElementById('photoViewerModal');
+      var viewerImg = document.getElementById('viewerImage');
+      var metaBox = document.getElementById('photoMeta');
+      function preventScrollEvent(e){ e.preventDefault(); }
+      overlay && overlay.addEventListener('wheel', preventScrollEvent, { passive: false });
+      overlay && overlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      modal && modal.addEventListener('wheel', preventScrollEvent, { passive: false });
+      modal && modal.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      var scrollContainer = windowEl ? windowEl.querySelector('.photos-scroll') : null;
+      function stopScrollPropagation(e){ e.stopPropagation(); }
+      windowEl && windowEl.addEventListener('wheel', stopScrollPropagation, { passive: true });
+      windowEl && windowEl.addEventListener('touchmove', stopScrollPropagation, { passive: true });
+      scrollContainer && scrollContainer.addEventListener('wheel', stopScrollPropagation, { passive: true });
+      scrollContainer && scrollContainer.addEventListener('touchmove', stopScrollPropagation, { passive: true });
+      var viewerClose = document.getElementById('viewerClose');
+      var navPrev = document.getElementById('navPrev');
+      var navNext = document.getElementById('navNext');
+      var currentIndex = -1;
+      var assetBaseRemote = document.body.getAttribute('data-asset-base') || 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main';
+      var assetBaseLocal = assetBaseRemote;
+      var scanCache = {}; var scanPromises = {}; var SCAN_TTL = 5*60*1000;
+      function isRemoteGit(u){ return /^https?:\/\/(raw\.githubusercontent\.com|cdn\.jsdelivr\.net)/.test(u); }
+      function makeOptimized(u, w, fmt){ var f = fmt || 'webp'; return '/_optimized/?src=' + encodeURIComponent(u) + '&w=' + w + '&fmt=' + f; }
+      function getOptimSrc(u, w){ return isRemoteGit(u) ? makeOptimized(u, w) : u; }
+      function getOptimSrcset(u){ if(isRemoteGit(u)) return (makeOptimized(u,480)+' 480w, '+makeOptimized(u,768)+' 768w, '+makeOptimized(u,1080)+' 1080w'); return ''; }
+      // Image path structure (GitHub raw):
+      // social-media-graphics/: Socialmedia_##.jpg/png
+      // ecommerce-graphics/: Ecommerce_##.jpg/png
+      // web-designs/: Web_##.jpg/png
+      // content-creation/: Content_##.jpg/png
+      var remoteAssetsBase = assetBaseRemote.replace(/\/$/, '');
+      var categories = {
+        social: { path: remoteAssetsBase, remote: 'https://cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets', files: [], prefix: 'Socialmedia_##', scan: true },
+        ecommerce: { path: remoteAssetsBase, remote: 'https://cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets', files: [], prefix: 'Ecommerce_##', scan: true },
+        web: { path: remoteAssetsBase, remote: 'https://cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets', files: [], prefix: 'Web_##', scan: true },
+        content: { path: remoteAssetsBase, remote: 'https://cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets', files: [], prefix: 'Content_##', scan: true }
+      };
+      ['social','ecommerce','web','content'].forEach(function(k){ scanGallery(k).then(function(files){ categories[k].files = files; }); });
+      var scrollLock = { x: 0, y: 0, locked: false };
+      function lockScroll(){
+        if(scrollLock.locked) return;
+        scrollLock.x = window.scrollX || 0;
+        scrollLock.y = window.scrollY || 0;
+        var sbw = window.innerWidth - document.documentElement.clientWidth;
+        document.body.classList.add('scroll-lock-transition');
+        document.documentElement.classList.add('scroll-locked');
+        document.body.classList.add('scroll-locked');
+        document.body.style.position = 'fixed';
+        document.body.style.top = (-scrollLock.y) + 'px';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+        document.body.style.paddingRight = sbw > 0 ? (sbw + 'px') : '';
+        scrollLock.locked = true;
+      }
+      function unlockScroll(){
+        if(!scrollLock.locked) return;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.body.style.paddingRight = '';
+        document.documentElement.classList.remove('scroll-locked');
+        document.body.classList.remove('scroll-locked');
+        document.body.classList.remove('scroll-lock-transition');
+        window.scrollTo(scrollLock.x, scrollLock.y);
+        scrollLock.locked = false;
+      }
+      function scanGallery(cat){
+        var now = Date.now();
+        if(scanCache[cat] && (now - scanCache[cat].ts) < SCAN_TTL){ return Promise.resolve(scanCache[cat].files.slice()); }
+        if(scanPromises[cat]) return scanPromises[cat];
+        var promise = new Promise(function(resolve){
+          var c = categories[cat];
+          if(!c || !c.scan) return resolve(c ? c.files : []);
+          var allow = /\.(jpg|jpeg|png|gif|mp4|webm|mov|avi)$/i;
+          var versionMap = {};
+          function finalize(list){
+            var out = [];
+            var errs = [];
+            if(cat==='content'){
+              list.forEach(function(name){
+                if(/^content_(\d{2})\.(jpg|jpeg|png|gif)$/i.test(name)){
+                  var m1 = name.match(/^content_(\d{2})\.(jpg|jpeg|png|gif)$/i);
+                  var n1 = parseInt(m1[1], 10);
+                  if(!(n1>=1 && n1<=99)) { errs.push('Out of range: '+name); return; }
+                  out.push(name);
+                  return;
+                }
+                if(name.startsWith('Content_') && /\.\w+$/i.test(name)){
+                  var m2 = name.match(/^Content_(\d{2})\.(mp4|webm|mov|avi)$/i);
+                  if(!m2) return;
+                  var n2 = parseInt(m2[1], 10);
+                  if(!(n2>=0 && n2<=99)) { errs.push('Out of range: '+name); return; }
+                  out.push(name);
+                  return;
+                }
+              });
+            } else if(cat==='social'){
+              list.forEach(function(name){ var m = name.match(/^socialmedia_(\d{2})\.(jpg|jpeg|png|gif)$/i); if(!m) return; var num = parseInt(m[1], 10); if(!(num>=1 && num<=99)) { errs.push('Out of range: '+name); return; } out.push(name); });
+            } else if(cat==='ecommerce'){
+              list.forEach(function(name){ var m = name.match(/^ecommerce_(\d{2})\.(jpg|jpeg|png|gif)$/i); if(!m) return; var num = parseInt(m[1], 10); if(!(num>=1 && num<=99)) { errs.push('Out of range: '+name); return; } out.push(name); });
+            } else if(cat==='web'){
+              list.forEach(function(name){ var m = name.match(/^web_(\d{2})\.(jpg|jpeg|png|gif)$/i); if(!m) return; var num = parseInt(m[1], 10); if(!(num>=1 && num<=99)) { errs.push('Out of range: '+name); return; } out.push(name); });
+            }
+            categories[cat].errors = errs;
+            out.sort();
+            categories[cat].versions = versionMap;
+            scanCache[cat] = { files: out, ts: Date.now() };
+            resolve(out);
+          }
+          function fromGithub(){
+            var api = 'https://api.github.com/repos/JHUN062901/Portfolio/contents/assets';
+            return fetch(api, { headers: { 'Accept': 'application/vnd.github.v3+json' }, cache: 'no-store', mode: 'cors' })
+              .then(function(r){ if(!r.ok) throw new Error('fail'); return r.json(); })
+              .then(function(arr){ var list = arr.filter(function(it){ return it.type==='file' && allow.test(it.name); }); list.forEach(function(it){ if(it && it.name) versionMap[it.name] = ((it.sha||'') + '-' + it.name); }); finalize(list.map(function(it){ return it.name; })); });
+          }
+          function fromJsDelivr(){
+            var alt = 'https://data.jsdelivr.com/v1/package/gh/JHUN062901/Portfolio@main';
+            return fetch(alt, { cache: 'no-store', mode: 'cors' })
+              .then(function(r){ if(!r.ok) throw new Error('fail'); return r.json(); })
+              .then(function(json){ var files = (json && json.files) ? json.files : []; var list = files.filter(function(f){ return f.type==='file' && /^assets\//.test(f.name) && allow.test(f.name); }); list.forEach(function(f){ var n = f.name.replace(/^assets\//,''); versionMap[n] = ((f.hash || (''+(f.time||''))) + '-' + n); }); finalize(list.map(function(f){ return f.name.replace(/^assets\//,''); })); });
+          }
+          fromGithub().catch(function(){ fromJsDelivr().catch(function(){ resolve([]); }); }).finally(function(){ scanPromises[cat] = null; });
+        });
+        scanPromises[cat] = promise;
+        return promise;
+      }
+      function getCategoryPhotos(cat){
+        var c = categories[cat];
+        if(!c) return [];
+        return c.files.map(function(fname){
+          var v = (c.versions && c.versions[fname]) ? c.versions[fname] : fname;
+          var vq = v ? ('?v='+encodeURIComponent(v)) : '';
+          var primary = c.path + '/' + fname + vq;
+          var fbs = [];
+          if(c.remote) fbs.push(c.remote + '/' + fname + vq);
+          if(c.legacy) fbs.push('https://raw.githubusercontent.com/JHUN062901/Portfolio/main/' + c.legacy + '/' + fname + vq);
+          var ext = (fname.split('.').pop()||'').toLowerCase();
+          var kind = (/^(jpg|jpeg|png|gif)$/).test(ext) ? 'image' : ((/^(mp4|webm|mov|avi)$/).test(ext) ? 'video' : 'other');
+          return { src: primary, fallback: fbs, title: fname, date: '', kind: kind };
+        });
+      }
+      function getRepoImageUrls(){
+        function parseFiles(files){
+          var reMap = {
+            social: /^socialmedia_(\d{2})\.(jpg|jpeg|png|gif)$/i,
+            ecommerce: /^ecommerce_(\d{2})\.(jpg|jpeg|png|gif)$/i,
+            web: /^web_(\d{2})\.(jpg|jpeg|png|gif)$/i,
+            content: /^content_(\d{2})\.(jpg|jpeg|png|gif)$/i
+          };
+          function makeObj(name){ return { src: 'https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/' + encodeURIComponent(name), title: name.replace(/\.[^.]+$/, ''), date: '' }; }
+          var result = { social: [], ecommerce: [], web: [], content: [], invalid: [] };
+          files.forEach(function(name){
+            var matched = false;
+            Object.keys(reMap).forEach(function(cat){
+              if(matched) return;
+              var m = reMap[cat].exec(name);
+              if(m){
+                var num = parseInt(m[1], 10);
+                if(num>=1 && num<=99){ result[cat].push(makeObj(name)); matched = true; }
+                else { result.invalid.push({ name: name, error: 'Out of range 01-99' }); matched = true; }
+              }
+            });
+            if(!matched){ result.invalid.push({ name: name, error: 'Does not match any category pattern' }); }
+          });
+          function sortCat(list){
+            list.sort(function(a,b){
+              var na = parseInt((a.title.match(/_(\d{2})$/)||[0,'00'])[1],10);
+              var nb = parseInt((b.title.match(/_(\d{2})$/)||[0,'00'])[1],10);
+              return na-nb;
+            });
+          }
+          sortCat(result.social);
+          sortCat(result.ecommerce);
+          sortCat(result.web);
+          sortCat(result.content);
+          window.__imageUrls = result;
+          return result;
+        }
+        var allow = /\.(jpg|jpeg|png|gif)$/i;
+        var api = 'https://api.github.com/repos/JHUN062901/Portfolio/contents/assets';
+        return fetch(api, { headers: { 'Accept': 'application/vnd.github.v3+json' }, cache: 'no-store', mode: 'cors' })
+          .then(function(r){ if(!r.ok) throw new Error('GitHub API error: '+r.status); return r.json(); })
+          .then(function(arr){ var files = arr.filter(function(it){ return it.type==='file' && allow.test(it.name); }).map(function(it){ return it.name; }); return parseFiles(files); })
+          .catch(function(){
+            var alt = 'https://data.jsdelivr.com/v1/package/gh/JHUN062901/Portfolio@main';
+            return fetch(alt, { cache: 'no-store', mode: 'cors' })
+              .then(function(r){ if(!r.ok) throw new Error('jsDelivr error: '+r.status); return r.json(); })
+              .then(function(json){ var files = (json && json.files) ? json.files : []; var list = files.filter(function(f){ return f.type==='file' && /^assets\//.test(f.name) && allow.test(f.name); }).map(function(f){ return f.name.replace(/^assets\//,''); }); return parseFiles(list); });
+          });
+      }
+      var activeCategory = 'all';
+      function updateActiveCategory(cat){
+        document.querySelectorAll('.photos-list [data-category]').forEach(function(b){
+          var is = (b.getAttribute('data-category')===cat);
+          b.classList.toggle('bg-blue-600', is);
+          b.classList.toggle('text-white', is);
+          b.classList.toggle('bg-white/80', !is);
+          b.classList.toggle('border', !is);
+          b.classList.toggle('border-gray-300', !is);
+          b.classList.toggle('text-gray-800', !is);
+        });
+        activeCategory = cat;
+      }
+      var isSwitching = false, nextCat = null;
+      function setCategory(cat, force){
+        if(isSwitching){ nextCat = cat; return; }
+        isSwitching = true;
+        updateActiveCategory(cat);
+        if(gridEl){
+          gridEl.setAttribute('aria-busy','true');
+          gridEl.classList.add('switching-out');
+        }
+        var spinnerTimeout = setTimeout(function(){ var gl = document.getElementById('gridLoading'); if(gl) gl.classList.add('show'); }, 500);
+        
+        var uiPromise = new Promise(function(resolve){
+          if(!gridEl){ resolve(); return; }
+          var resolved = false;
+          function onEnd(e){ if(e && e.target!==gridEl) return; if(resolved) return; resolved=true; gridEl.removeEventListener('transitionend', onEnd); resolve(); }
+          gridEl.addEventListener('transitionend', onEnd, { once: true });
+          setTimeout(function(){ if(!resolved){ resolved=true; resolve(); } }, 260);
+        });
+
+        var toScan = [];
+        if(cat === 'all'){
+          ['social','ecommerce','web','content'].forEach(function(k){ if(categories[k] && categories[k].scan) toScan.push(k); });
+        } else {
+          if(categories[cat] && categories[cat].scan) toScan.push(cat);
+        }
+        
+        if(force){ toScan.forEach(function(k){ scanCache[k] = null; }); }
+        var scanPromise = Promise.all(toScan.map(function(c){
+          return scanGallery(c).then(function(files){ if(files && files.length>0) categories[c].files = files; });
+        }));
+
+        var start = performance.now();
+        var startCount = (performance.getEntriesByType ? performance.getEntriesByType('resource').length : 0);
+
+        Promise.all([uiPromise, scanPromise]).then(function(){
+          var list = [];
+          if(cat==='all'){ list = getCategoryPhotos('social').concat(getCategoryPhotos('ecommerce')).concat(getCategoryPhotos('web')).concat(getCategoryPhotos('content')); }
+          else { list = getCategoryPhotos(cat); }
+          if(list.length===0 && defaultPhotos && defaultPhotos.length>0){
+            list = defaultPhotos.map(function(p){ var ext=(p.src.split('.').pop()||'').toLowerCase(); var kind=(/^(jpg|jpeg|png|gif)$/).test(ext)?'image':((/^(mp4|webm|mov|avi)$/).test(ext)?'video':'other'); return { src: p.src, fallback: [], title: p.title||'', date: p.date||'', kind: kind }; });
+          }
+          function normKey(p){ var name=(p.title||'').toLowerCase(); if(!name){ try{ var u=new URL(p.src); name=(u.pathname.split('/').pop()||'').toLowerCase(); }catch(e){ name=(p.src.split('/').pop()||'').toLowerCase(); } } return name; }
+          var seen = new Set();
+          var dedup = [];
+          list.forEach(function(p){ var k = normKey(p); if(seen.has(k)) return; seen.add(k); dedup.push(p); });
+          photos = dedup;
+          populateGrid();
+          if(gridEl){ gridEl.classList.remove('switching-out'); gridEl.classList.add('switching-in'); }
+          
+          var imgs = Array.prototype.slice.call(gridEl.querySelectorAll('img'));
+          var pending = imgs.filter(function(i){ return !i.complete; }).map(function(i){ return new Promise(function(res){ i.addEventListener('load', res, { once: true }); }); });
+          
+          function finish(){
+             clearTimeout(spinnerTimeout);
+             var gl = document.getElementById('gridLoading'); if(gl) gl.classList.remove('show');
+             if(gridEl){ gridEl.removeAttribute('aria-busy'); gridEl.classList.remove('switching-in'); }
+             var end = performance.now();
+             var dur = Math.round(end - start);
+             var resources = performance.getEntriesByType ? performance.getEntriesByType('resource').slice(startCount) : [];
+             var bytes = resources.reduce(function(acc, e){ return acc + (e.transferSize || 0); }, 0);
+             console.log('Category '+cat+' loaded '+imgs.length+' items in '+dur+'ms, '+Math.round(bytes/1024)+'KB');
+             isSwitching = false;
+             if(nextCat){ var nc = nextCat; nextCat = null; setCategory(nc); }
+          }
+          if(pending.length>0) Promise.all(pending).then(finish);
+          else finish();
+        });
+      }
+      function populateGrid(){
+        if(!gridEl) return;
+        var frag = document.createDocumentFragment();
+        gridEl.textContent = '';
+        photos.forEach(function(p, idx){
+          var btn = document.createElement('button');
+          btn.className = 'relative group photo-item overflow-hidden focus:outline-none focus:ring-2 focus:ring-white/30';
+          btn.setAttribute('aria-label', p.title);
+          btn.dataset.index = idx;
+          var wrap = document.createElement('div');
+          wrap.className = 'thumb-wrap';
+          var skeleton = document.createElement('div');
+          skeleton.className = 'thumb-skeleton';
+          var mediaEl;
+          if(p.kind==='video'){
+            var vid = document.createElement('video');
+            vid.src = p.src;
+            vid.preload = 'auto';
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.controls = false;
+            mediaEl = vid;
+            (function(){
+              var name = (p.title||'') + '';
+              var m = name.match(/^(?:Content|content)_(\d{2})\.(mp4|webm|mov|avi)$/i);
+              if(m){
+                var num = m[1];
+                var posterName = 'content_' + num + '.jpg';
+                var hasPoster = (categories.content && Array.isArray(categories.content.files)) ? categories.content.files.indexOf(posterName) !== -1 : false;
+                if(hasPoster){
+                  var posterRemote = (categories.content.remote ? (categories.content.remote + '/' + posterName) : (assetBaseRemote.replace(/\/$/, '') + '/' + posterName));
+                  var isGitPoster = isRemoteGit(posterRemote);
+                  vid.poster = isGitPoster ? getOptimSrc(posterRemote, 480) : posterRemote;
+                }
+              }
+            })();
+            var playBtn = document.createElement('button');
+            playBtn.type = 'button';
+            playBtn.className = 'absolute left-2 bottom-2 w-8 h-8 rounded-full bg-black/40 border border-white/30 text-white grid place-items-center';
+            playBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+            function togglePlay(){ if(vid.paused){ vid.play().catch(function(){}); playBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; } else { vid.pause(); playBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; } }
+            playBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); togglePlay(); });
+          } else {
+            var img = document.createElement('img');
+            var isGit = isRemoteGit(p.src);
+            var thumbSrc = isGit ? getOptimSrc(p.src, 480) : (p.src + (p.src.indexOf('?')===-1 ? '?w=480' : '&w=480'));
+            img.src = thumbSrc;
+            img.srcset = isGit ? getOptimSrcset(p.src) : (p.src + (p.src.indexOf('?')===-1 ? '?w=480' : '&w=480') + ' 480w, ' + p.src + (p.src.indexOf('?')===-1 ? '?w=768' : '&w=768') + ' 768w, ' + p.src + (p.src.indexOf('?')===-1 ? '?w=1080' : '&w=1080') + ' 1080w');
+            img.dataset.origSrc = p.src;
+            mediaEl = img;
+          }
+          if(p.kind!=='video' && p.fallback && p.fallback.length){
+            var fallbacks = Array.isArray(p.fallback) ? p.fallback.slice() : [p.fallback];
+            function tryNext(){
+              if(!fallbacks.length){ img.onerror = null; return; }
+              var f = fallbacks.shift();
+              var isGitFb = isRemoteGit(f);
+              var fsrc = isGitFb ? getOptimSrc(f,480) : (f + (f.indexOf('?')===-1 ? '?w=480' : '&w=480'));
+              var fset = isGitFb ? getOptimSrcset(f) : (f + (f.indexOf('?')===-1 ? '?w=480' : '&w=480') + ' 480w, ' + f + (f.indexOf('?')===-1 ? '?w=768' : '&w=768') + ' 768w, ' + f + (f.indexOf('?')===-1 ? '?w=1080' : '&w=1080') + ' 1080w');
+              img.onerror = tryNext;
+              img.src = fsrc;
+              img.srcset = fset;
+            }
+            img.onerror = tryNext;
+          }
+          if(p.kind==='video'){ mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; }
+          else { mediaEl.alt = p.title; mediaEl.loading = 'eager'; mediaEl.decoding = 'sync'; mediaEl.fetchPriority = 'high'; mediaEl.sizes = '(min-width:1024px) 14vw, (min-width:640px) 22vw, 30vw'; mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; if(isGit){ var rawSrc = p.src; function fallToRaw(){ mediaEl.removeEventListener('error', fallToRaw); mediaEl.src = rawSrc; mediaEl.srcset = ''; } mediaEl.addEventListener('error', fallToRaw, { once: true }); setTimeout(function(){ if(!mediaEl.complete || !mediaEl.naturalWidth){ fallToRaw(); } }, 2000); } }
+          wrap.appendChild(mediaEl);
+          if(p.kind==='video'){ wrap.appendChild(playBtn); }
+          wrap.appendChild(skeleton);
+          btn.appendChild(wrap);
+          function onLoad(){ mediaEl.classList.add('loaded'); skeleton.remove(); }
+          if(p.kind==='video'){ mediaEl.addEventListener('loadeddata', onLoad, { once: true }); }
+          else { if(mediaEl.complete) onLoad(); else mediaEl.addEventListener('load', onLoad, { once: true }); }
+          btn.addEventListener('mouseenter', function(){ gridEl.classList.add('grid-hovering'); btn.classList.add('is-hovered'); });
+          btn.addEventListener('mouseleave', function(){ gridEl.classList.remove('grid-hovering'); btn.classList.remove('is-hovered'); });
+          btn.addEventListener('focus', function(){ gridEl.classList.add('grid-hovering'); btn.classList.add('is-hovered'); });
+          btn.addEventListener('blur', function(){ gridEl.classList.remove('grid-hovering'); btn.classList.remove('is-hovered'); });
+          btn.addEventListener('touchstart', function(){ gridEl.classList.add('grid-hovering'); btn.classList.add('is-hovered'); }, { passive: true });
+          btn.addEventListener('touchend', function(){ gridEl.classList.remove('grid-hovering'); btn.classList.remove('is-hovered'); }, { passive: true });
+          frag.appendChild(btn);
+        });
+        gridEl.appendChild(frag);
+        if(photosCount) photosCount.textContent = photos.length + ' items';
+      }
+      function openWindow(){
+        overlay.classList.remove('pointer-events-none');
+        overlay.classList.add('opacity-100');
+        lockScroll();
+        // Prepopulate grid to avoid delay on first open
+        if(!gridEl.firstElementChild){ setCategory('all'); }
+        requestAnimationFrame(function(){
+          windowEl.classList.remove('opacity-0');
+          windowEl.classList.remove('scale-95');
+          windowEl.classList.add('opacity-100');
+          windowEl.classList.add('scale-100');
+        });
+        closeBtn && closeBtn.focus();
+      }
+      function closeWindow(){
+        windowEl.classList.remove('opacity-100');
+        windowEl.classList.add('opacity-0');
+        windowEl.classList.remove('scale-100');
+        windowEl.classList.add('scale-95');
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        setTimeout(function(){ overlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+      }
+      function showViewer(index){
+        currentIndex = index;
+        var p = photos[currentIndex];
+        var isGitViewer = isRemoteGit(p.src);
+        var clickedSrc = lastClickedSrc;
+        lastClickedSrc = null;
+        var viewerVideo = document.getElementById('viewerVideo');
+        if(p.kind==='video'){
+          viewerImage.classList.add('hidden');
+          viewerVideo.classList.remove('hidden');
+          viewerVideo.src = clickedSrc ? clickedSrc : p.src;
+          function setMetaV(){ var iw = viewerVideo.videoWidth, ih = viewerVideo.videoHeight; metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; }
+          if(viewerVideo.readyState>=1) setMetaV(); else viewerVideo.addEventListener('loadedmetadata', setMetaV, { once: true });
+        } else {
+          viewerVideo.classList.add('hidden');
+          viewerImage.classList.remove('hidden');
+          viewerImg.src = clickedSrc ? clickedSrc : (isGitViewer ? getOptimSrc(p.src, 1280) : (p.src + (p.src.indexOf('?')===-1 ? '?w=1080' : '&w=1080')));
+          if(p.fallback && p.fallback.length){
+            var fbs = Array.isArray(p.fallback) ? p.fallback.slice() : [p.fallback];
+            function tryViewerNext(){
+              if(!fbs.length){ viewerImg.onerror = null; return; }
+              var f = fbs.shift();
+              var isGitFb = isRemoteGit(f);
+              viewerImg.onerror = tryViewerNext;
+              viewerImg.src = isGitFb ? getOptimSrc(f, 1280) : (f + (f.indexOf('?')===-1 ? '?w=1080' : '&w=1080'));
+            }
+            viewerImg.onerror = tryViewerNext;
+          }
+          viewerImg.alt = p.title;
+          function setMeta(){ var iw = viewerImg.naturalWidth, ih = viewerImg.naturalHeight; metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; }
+          if(viewerImg.complete) setMeta(); else viewerImg.addEventListener('load', setMeta, { once: true });
+        }
+        if(gridEl){
+          gridEl.classList.remove('grid-hovering');
+          gridEl.querySelectorAll('.is-hovered').forEach(function(el){ el.classList.remove('is-hovered'); });
+          gridEl.setAttribute('aria-hidden','true');
+          gridEl.style.pointerEvents = 'none';
+        }
+        modal.classList.remove('pointer-events-none');
+        modal.classList.add('opacity-100');
+        lockScroll();
+      }
+      function hideViewer(){
+        modal.classList.add('pointer-events-none');
+        modal.classList.remove('opacity-100');
+        var viewerVideo = document.getElementById('viewerVideo');
+        if(viewerVideo){ try { viewerVideo.pause(); viewerVideo.removeAttribute('src'); viewerVideo.load(); } catch(e){} }
+        if(gridEl){
+          gridEl.removeAttribute('aria-hidden');
+          gridEl.style.pointerEvents = '';
+        }
+        if(!overlay || !overlay.classList.contains('opacity-100')) { unlockScroll(); }
+      }
+      function next(){ if(currentIndex < 0) return; if(!photos || photos.length<1) return; var n = (currentIndex+1)%photos.length; showViewer(n); }
+      function prev(){ if(currentIndex < 0) return; if(!photos || photos.length<1) return; var p = (currentIndex-1+photos.length)%photos.length; showViewer(p); }
+      setCategory('all');
+      document.querySelectorAll('.photos-list [data-category]').forEach(function(btn){
+        btn.addEventListener('click', function(){ setCategory(btn.getAttribute('data-category'), true); });
+      });
+      var gridBtn = document.getElementById('gridViewBtn');
+      if(gridBtn){ gridBtn.addEventListener('click', function(){ setCategory(activeCategory, true); }); }
+      var lastPointerType = null;
+      var lastClickedSrc = null;
+      gridEl && gridEl.addEventListener('pointerdown', function(e){ lastPointerType = e.pointerType || null; });
+      gridEl && gridEl.addEventListener('click', function(e){
+        var t = e.target.closest('button[aria-label]');
+        if(!t) return;
+        var isMouse = (lastPointerType === 'mouse') || (lastPointerType === null && e.detail > 0);
+        var idx = parseInt(t.dataset.index, 10);
+        var p = photos[idx];
+        if(p && p.kind==='video' && isMouse){
+          var vidEl = t.querySelector('video.photo-thumb');
+          if(vidEl){
+            if(e.detail >= 2){ showViewer(idx); return; }
+            if(vidEl.paused){ vidEl.play().catch(function(){}); }
+            else { vidEl.pause(); }
+            return;
+          }
+        }
+        if(isMouse){
+          var imgEl = t.querySelector('.photo-thumb');
+          if(imgEl && !imgEl.classList.contains('is-fading')){
+            imgEl.classList.add('is-fading');
+            imgEl.classList.add('fade-click');
+            setTimeout(function(){ imgEl.classList.remove('fade-click'); imgEl.classList.remove('is-fading'); }, 500);
+          }
+          if(imgEl){ lastClickedSrc = imgEl.currentSrc || imgEl.src; }
+        }
+        showViewer(idx);
+        lastPointerType = null;
+      });
+      navPrev && navPrev.addEventListener('click', function(e){ e.preventDefault(); prev(); });
+      navNext && navNext.addEventListener('click', function(e){ e.preventDefault(); next(); });
+      var viewerLeftZone = document.getElementById('viewerLeftZone');
+      var viewerRightZone = document.getElementById('viewerRightZone');
+      viewerLeftZone && viewerLeftZone.addEventListener('click', function(e){ e.preventDefault(); prev(); });
+      viewerRightZone && viewerRightZone.addEventListener('click', function(e){ e.preventDefault(); next(); });
+      viewerLeftZone && viewerLeftZone.addEventListener('touchstart', function(){ prev(); }, { passive: true });
+      viewerRightZone && viewerRightZone.addEventListener('touchstart', function(){ next(); }, { passive: true });
+      viewerClose && viewerClose.addEventListener('click', hideViewer);
+      document.addEventListener('keydown', function(e){
+        if(overlay.classList.contains('pointer-events-none')) return;
+        if(e.key==='Escape') { if(modal.classList.contains('opacity-100')) hideViewer(); else closeWindow(); }
+        if(e.key==='ArrowRight') next();
+        if(e.key==='ArrowLeft') prev();
+      });
+      if(opener){
+        opener.setAttribute('role','button');
+        opener.setAttribute('aria-label','Open Photos');
+        opener.addEventListener('click', function(e){ e.preventDefault(); openWindow(); });
+        opener.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); openWindow(); } });
+      }
+      closeBtn && closeBtn.addEventListener('click', closeWindow);
+      minimizeBtn && minimizeBtn.addEventListener('click', closeWindow);
+      maximizeBtn && maximizeBtn.addEventListener('click', function(){
+        var rfs = windowEl.requestFullscreen || windowEl.webkitRequestFullscreen || windowEl.msRequestFullscreen;
+        if(rfs) rfs.call(windowEl);
+      });
+      var thumbs = document.querySelectorAll('[data-scroll-thumb]');
+      if(window.PerformanceObserver){
+        try{
+          var resObs = new PerformanceObserver(function(list){
+            list.getEntries().forEach(function(e){ if(/\.(jpg|jpeg|png|webp|avif)$/i.test(e.name)){ /* no-op */ } });
+          });
+          resObs.observe({ type: 'resource', buffered: true });
+          var lcpObs = new PerformanceObserver(function(list){ list.getEntries().forEach(function(e){ /* no-op */ }); });
+          lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+        } catch(e){}
+      }
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          var el = entry.target;
+          var img = el.querySelector('img');
+          var vid = el.querySelector('video.photo-thumb');
+          if(!img) return;
+          if(entry.isIntersecting){
+            function setup(){
+              var cw = el.clientWidth;
+              var ch = el.clientHeight;
+              var iw = img.naturalWidth;
+              var ih = img.naturalHeight;
+              if(!iw || !ih || !cw || !ch) return;
+              var scale = cw / iw;
+              var renderedHeight = ih * scale;
+              var distance = -(renderedHeight - ch);
+              el.style.setProperty('--scroll-distance', distance + 'px');
+              var dAttr = parseFloat(el.getAttribute('data-scroll-duration'));
+              var dur = isNaN(dAttr) ? 8 : dAttr;
+              dur = Math.max(8, Math.min(15, dur));
+              el.style.setProperty('--scroll-duration', dur + 's');
+              el.classList.add('scrolling');
+            }
+            if(img.complete) setup(); else img.addEventListener('load', setup, { once: true });
+          } else {
+            el.classList.remove('scrolling');
+            el.style.removeProperty('--scroll-distance');
+          }
+        });
+      }, { threshold: 0.2 });
+      thumbs.forEach(function(el){
+        io.observe(el);
+        var root = el.closest('[aria-label]') || el;
+        root.addEventListener('mouseenter', function(){ var i = el.querySelector('img'); if(i) i.style.animationPlayState = 'paused'; });
+        root.addEventListener('mouseleave', function(){ var i = el.querySelector('img'); if(i) i.style.animationPlayState = 'running'; });
+        root.addEventListener('touchstart', function(){ var i = el.querySelector('img'); if(i) i.style.animationPlayState = 'paused'; }, { passive: true });
+        root.addEventListener('touchend', function(){ var i = el.querySelector('img'); if(i) i.style.animationPlayState = 'running'; });
+      });
+      var ioGridMedia = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          var btn = entry.target;
+          var vid = btn.querySelector('video.photo-thumb');
+          if(!vid) return;
+          if(entry.isIntersecting){ vid.preload = 'auto'; try { vid.load(); } catch(e){} }
+        });
+      }, { root: document.querySelector('.photos-scroll') || null, rootMargin: '200px', threshold: 0.1 });
+      document.querySelectorAll('#photosGrid button[aria-label]').forEach(function(b){ ioGridMedia.observe(b); });
+      window.addEventListener('resize', function(){
+        thumbs.forEach(function(el){
+          if(el.classList.contains('scrolling')){
+            var img = el.querySelector('img');
+            if(!img) return;
+            var cw = el.clientWidth;
+            var ch = el.clientHeight;
+            var iw = img.naturalWidth;
+            var ih = img.naturalHeight;
+            if(!iw || !ih || !cw || !ch) return;
+            var scale = cw / iw;
+            var renderedHeight = ih * scale;
+            var distance = -(renderedHeight - ch);
+            el.style.setProperty('--scroll-distance', distance + 'px');
+          }
+        });
+      });
+
+      function upgradeGridToOptimized(){
+        var imgs = document.querySelectorAll('#photosGrid img.photo-thumb');
+        imgs.forEach(function(img){
+          var u = img.dataset.origSrc;
+          if(!u) return;
+          if(isRemoteGit(u)){
+            img.src = getOptimSrc(u, 480);
+            img.srcset = getOptimSrcset(u);
+          }
+        });
+      }
+    });
+  </script>
+  
+<link id="all-fonts-link-font-geist" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist">.font-geist { font-family: 'Geist', sans-serif !important; }</style><link id="all-fonts-link-font-roboto" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-roboto">.font-roboto { font-family: 'Roboto', sans-serif !important; }</style><link id="all-fonts-link-font-montserrat" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-montserrat">.font-montserrat { font-family: 'Montserrat', sans-serif !important; }</style><link id="all-fonts-link-font-poppins" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-poppins">.font-poppins { font-family: 'Poppins', sans-serif !important; }</style><link id="all-fonts-link-font-playfair" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;900&amp;display=swap"><style id="all-fonts-style-font-playfair">.font-playfair { font-family: 'Playfair Display', serif !important; }</style><link id="all-fonts-link-font-instrument-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:wght@400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-instrument-serif">.font-instrument-serif { font-family: 'Instrument Serif', serif !important; }</style><link id="all-fonts-link-font-merriweather" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&amp;display=swap"><style id="all-fonts-style-font-merriweather">.font-merriweather { font-family: 'Merriweather', serif !important; }</style><link id="all-fonts-link-font-bricolage" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-bricolage">.font-bricolage { font-family: 'Bricolage Grotesque', sans-serif !important; }</style><link id="all-fonts-link-font-jakarta" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-jakarta">.font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif !important; }</style><link id="all-fonts-link-font-manrope" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-manrope">.font-manrope { font-family: 'Manrope', sans-serif !important; }</style><link id="all-fonts-link-font-space-grotesk" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-space-grotesk">.font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }</style><link id="all-fonts-link-font-work-sans" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-work-sans">.font-work-sans { font-family: 'Work Sans', sans-serif !important; }</style><link id="all-fonts-link-font-pt-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-pt-serif">.font-pt-serif { font-family: 'PT Serif', serif !important; }</style><link id="all-fonts-link-font-geist-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist-mono">.font-geist-mono { font-family: 'Geist Mono', monospace !important; }</style><link id="all-fonts-link-font-space-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-space-mono">.font-space-mono { font-family: 'Space Mono', monospace !important; }</style><link id="all-fonts-link-font-quicksand" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-quicksand">.font-quicksand { font-family: 'Quicksand', sans-serif !important; }</style><link id="all-fonts-link-font-nunito" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-nunito">.font-nunito { font-family: 'Nunito', sans-serif !important; }</style></head>
+<body class="antialiased min-h-screen selection:bg-blue-500/20 relative" data-asset-base="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets">
+
+    <div id="helloIntro" class="hello-overlay">
+        <svg class="hello-svg" viewBox="0 0 1200 400">
+            <text x="50%" y="55%" text-anchor="middle" class="hello-text" style="font-size: 220px">hello</text>
+        </svg>
+    </div>
+
+    <div class="aura-background-component fixed inset-0 -z-10 pointer-events-none">
+        <div class="absolute inset-0" style="background:
+            radial-gradient(1000px 700px at 20% 20%, rgba(255,255,255,0.98), rgba(255,255,255,0.92) 40%, transparent 70%),
+            conic-gradient(from 210deg at 70% 30%, rgba(255,255,255,0.98), rgba(250,252,255,0.98) 25%, rgba(248,252,255,0.95) 50%, rgba(255,252,248,0.95) 75%, rgba(255,255,255,0.98)),
+            linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        "></div>
+        <div class="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-100/50 rounded-full blur-[120px] opacity-50"></div>
+            <div class="absolute top-1/3 left-1/4 w-[500px] h-[300px] bg-gradient-to-r from-blue-400 to-sky-300 rounded-full mix-blend-multiply blur-[96px] opacity-60 animate-blob-2"></div>
+            <div class="absolute top-[40%] left-[45%] w-[450px] h-[450px] bg-blue-600 rounded-full mix-blend-multiply blur-[128px] opacity-50 animate-blob-1"></div>
+            <div class="absolute top-1/2 left-[40%] w-[300px] h-[300px] bg-cyan-300 rounded-full mix-blend-multiply blur-[80px] opacity-60 animate-blob-3"></div>
+        </div>
+    </div>
+
+    <!-- Mac Menu Bar -->
+    <nav class="fixed top-0 w-full z-50 h-9 px-4 flex justify-between items-center text-[13px] font-medium bg-white/70 backdrop-blur-xl border-b border-black/[0.03] text-gray-900 select-none">
+        <div class="flex items-center gap-5">
+            <span class="font-bold cursor-default"></span>
+            <span class="font-semibold cursor-default tracking-tight">Jhunly</span>
+            <div class="hidden sm:flex gap-5 text-gray-500">
+                <a href="#work" class="hover:text-black transition-colors">File</a>
+                <a href="#about" class="hover:text-black transition-colors">Edit</a>
+                <a href="#services" class="hover:text-black transition-colors">View</a>
+                <a href="mailto:hello@jhunly.com" class="hover:text-black transition-colors">Window</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></span>
+                <span class="text-gray-500 hidden sm:inline">Online</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" strokewidth="1.5" class="lucide lucide-wifi w-3.5 h-3.5 text-gray-600"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
+                <span id="clock" class="font-medium tabular-nums text-gray-700">Mon 6:30 PM</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl z-10 mr-auto ml-auto pt-32 pr-6 pb-40 pl-6 relative">
+
+        <!-- Hero -->
+        <section class="flex flex-col items-center text-center mb-32 fade-in">
+            <div class="relative w-24 h-24 mb-8 group cursor-pointer">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-30 group-hover:opacity-60 blur transition duration-500"></div>
+                <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/d241e58d-9dac-4b48-811d-0e958c1bbf37_320w.jpg" class="w-full h-full object-cover border-white border-2 rounded-full relative shadow-lg" alt="Avatar">
+                <div class="absolute bottom-0 right-0 p-1 bg-white rounded-full border border-gray-100 shadow-sm">
+                    <div class="w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-white"></div>
+                </div>
+            </div>
+
+            <h1 class="sm:text-7xl text-5xl font-semibold text-gray-900 tracking-tight max-w-4xl mb-6">
+                Turning creative visions <br> into stunning <span class="text-blue-600">realities.</span>
+            </h1>
+            
+            <p class="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed mb-10 font-light">
+                A passionate Graphic and Web Designer turning ideas into compelling visuals. I thrive on creativity, storytelling, and
+                crafting experiences that leave a lasting impression.
+            </p>
+
+            <div class="flex gap-4">
+                <button class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:scale-105 transition-transform active:scale-95 flex items-center gap-2 shadow-lg shadow-gray-200">
+                    <span class="">Explore Work</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-down" strokewidth="1.5" class="lucide lucide-arrow-down w-4 h-4"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+                </button>
+                <button class="liquid-glass-button text-white/90 h-10 px-6 rounded-full font-medium text-sm">
+                    Copy Email
+                </button>
+            </div>
+        </section>
+
+
+        <!-- Bento Grid -->
+        <section id="work" class="mb-32">
+            <div class="flex items-end justify-between mb-8 px-1 fade-in delay-100">
+                <h2 class="text-2xl font-semibold text-gray-900">Selected Projects</h2>
+                <div class="flex gap-2">
+                    <button class="p-2 rounded-lg bg-black/5 hover:bg-black/10 transition-colors text-gray-600 hover:text-black">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" strokewidth="1.5" class="lucide lucide-layout-grid w-4 h-4"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+                    </button>
+                    <button class="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-400 hover:text-black">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="list" strokewidth="1.5" class="lucide lucide-list w-4 h-4"><path d="M3 5h.01"></path><path d="M3 12h.01"></path><path d="M3 19h.01"></path><path d="M8 5h13"></path><path d="M8 12h13"></path><path d="M8 19h13"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-5 auto-rows-[280px]">
+                
+                <!-- Main Feature -->
+                <div class="md:col-span-2 md:row-span-2 group relative rounded-3xl overflow-hidden bg-gray-900 border border-black/5 cursor-pointer fade-in delay-200 shadow-sm">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="collage absolute inset-0 group-hover:scale-105 transition-all duration-700 ease-out opacity-80" data-speed="5000" data-transition="800" aria-label="Graphic design collage" role="region" aria-roledescription="slideshow" aria-live="polite" tabindex="0" data-base="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Social%20Media%20Graphics" data-images="Socialmedia_01.jpg, Socialmedia_02.jpg, Socialmedia_03.jpg, Socialmedia_04.jpg, Socialmedia_05.jpg, Socialmedia_06.jpg, Socialmedia_07.jpg, Socialmedia_08.jpg, Socialmedia_09.jpg, Socialmedia_10.jpg, Socialmedia_11.jpg, Socialmedia_12.jpg">
+                        <div class="collage-layer active"><img alt="Poster" class="w-full h-full object-cover" /></div>
+                        <div class="collage-layer"><img alt="Poster" class="w-full h-full object-cover" /></div>
+                        <button class="collage-control" type="button" aria-label="Pause slideshow" aria-pressed="true">Pause</button>
+                    </div>
+                    <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg" class="absolute inset-0 w-full h-full object-cover opacity-80" alt="Project 1" data-collage-fallback style="display:none" loading="lazy" decoding="async">
+                    
+                    <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
+                        
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                                <h3 class="text-2xl md:text-3xl font-semibold text-white tracking-tight mb-1">Poster & Motion Design</h3>
+                                <p class="text-sm text-gray-200 line-clamp-2">Explorations in color, typography, and composition — showcasing campaigns, event posters, and motion identities.</p>
+                            </div>
+                            
+                            
+                        </div>
+                        <div id="case-panel" class="mt-4 hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] text-white/90">
+                                <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Discovery</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Moodboards</span></div>
+                                <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Concept</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Iteration</span></div>
+                                <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Production</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Delivery</span></div>
+                            </div>
+                            <div class="mt-3 flex items-center gap-4 text-[11px] text-white/90">
+                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="award" class="w-3.5 h-3.5"><path d="M12 8a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path><path d="M12 2v4"></path><path d="m2 12h4"></path><path d="m18 12h4"></path><path d="M12 22v-4"></path></svg><span>Awards 4</span></div>
+                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" class="w-3.5 h-3.5"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Clients 18</span></div>
+                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="flag" class="w-3.5 h-3.5"><path d="M4 4v16"></path><path d="M4 4h16l-4 4 4 4H4"></path></svg><span>Campaigns 26</span></div>
+                            </div>
+                            <div class="mt-3 flex gap-2 overflow-x-auto pr-2">
+                                <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_01.jpg" alt="Poster preview" class="w-16 h-16 object-cover rounded-lg shadow-sm hover:scale-105 transition" loading="lazy" decoding="async" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'">
+                                <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_02.jpg" alt="Poster preview" class="w-16 h-16 object-cover rounded-lg shadow-sm hover:scale-105 transition" loading="lazy" decoding="async" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'">
+                                <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_03.jpg" alt="Poster preview" class="w-16 h-16 object-cover rounded-lg shadow-sm hover:scale-105 transition" loading="lazy" decoding="async" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'">
+                                <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_04.jpg" alt="Poster preview" class="w-16 h-16 object-cover rounded-lg shadow-sm hover:scale-105 transition" loading="lazy" decoding="async" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats/Detail Card -->
+                <div class="md:col-span-1 md:row-span-2 rounded-3xl glass relative overflow-hidden group cursor-pointer fade-in delay-300 border border-black/5 shadow-sm" aria-label="Website design works" role="region">
+                    <div class="absolute inset-0 bg-gray-100"></div>
+                    <div class="scroll-thumb" data-scroll-thumb data-scroll-duration="8">
+                        <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/e94599c213bf3c36d13405934d18be40ad7bf9a9/assets/project_01.png" class="scroll-img opacity-90 transition-all duration-700" alt="Website Design" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg'">
+                    </div>
+                    <div class="absolute top-6 left-6 right-6 z-10">
+                        <div class="flex justify-between items-center">
+                            <div class="w-8 h-8 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="globe" class="lucide w-4 h-4"></svg>
+                            </div>
+                            <span class="text-[10px] text-white/80 font-mono bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">Web</span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
+                        <h3 class="text-xl font-semibold text-white">Website Design</h3>
+                        <p class="text-xs text-gray-300 mt-1">Responsive sites, landing pages, and e‑commerce.</p>
+                    </div>
+                </div>
+
+                <!-- Tall Card (Mobile) -->
+                <div class="md:col-span-1 md:row-span-2 rounded-3xl glass relative overflow-hidden group cursor-pointer fade-in delay-400 border border-black/5 shadow-sm">
+                    <div class="absolute inset-0 bg-gray-100"></div>
+                    <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-110 transition-all duration-700" alt="Mobile">
+                    
+                    <div class="absolute top-6 left-6 right-6 z-10">
+                        <div class="flex justify-between items-center">
+                            <div class="w-8 h-8 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="smartphone" strokewidth="1.5" class="lucide lucide-smartphone w-4 h-4"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg>
+                            </div>
+                            <span class="text-[10px] text-white/80 font-mono bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">iOS / Android</span>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
+                        <h3 class="text-xl font-semibold text-white">Zen Focus</h3>
+                        <p class="text-xs text-gray-300 mt-1">Meditation &amp; Productivity.</p>
+                    </div>
+                </div>
+
+                
+
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section id="services" class="fade-in mb-24">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="col-span-1">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Technical<br>Expertise</h2>
+                    <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                        Bridging the gap between design and engineering. I use modern tools to build pixel-perfect interfaces that scale.
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="group relative w-10 h-10 rounded-full bg-white border border-black/5 shadow-sm flex items-center justify-center">
+                            <svg aria-label="Photoshop" width="24" height="24" viewBox="0 0 24 24" class="w-5 h-5">
+                                <rect x="0" y="0" width="24" height="24" rx="4" fill="#001E36"></rect>
+                                <text x="12" y="16" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700" fill="#31A8FF">Ps</text>
+                            </svg>
+                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px] bg-white border border-black/5 text-gray-700 opacity-0 group-hover:opacity-100 transition">Photoshop</div>
+                        </div>
+                        <div class="group relative w-10 h-10 rounded-full bg-white border border-black/5 shadow-sm flex items-center justify-center">
+                            <svg aria-label="Illustrator" width="24" height="24" viewBox="0 0 24 24" class="w-5 h-5">
+                                <rect x="0" y="0" width="24" height="24" rx="4" fill="#330000"></rect>
+                                <text x="12" y="16" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700" fill="#FF9A00">Ai</text>
+                            </svg>
+                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px] bg-white border border-black/5 text-gray-700 opacity-0 group-hover:opacity-100 transition">Illustrator</div>
+                        </div>
+                        <div class="group relative w-10 h-10 rounded-full bg-white border border-black/5 shadow-sm flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="figma" class="lucide lucide-figma w-5 h-5"></svg>
+                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px] bg-white border border-black/5 text-gray-700 opacity-0 group-hover:opacity-100 transition">Figma</div>
+                        </div>
+                        <div class="group relative w-10 h-10 rounded-full bg-white border border-black/5 shadow-sm flex items-center justify-center">
+                            <img alt="Canva" class="w-5 h-5 tool-icon" src="https://cdn.simpleicons.org/canva"/>
+                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px] bg-white border border-black/5 text-gray-700 opacity-0 group-hover:opacity-100 transition">Canva</div>
+                        </div>
+                        <div class="group relative w-10 h-10 rounded-full bg-white border border-black/5 shadow-sm flex items-center justify-center">
+                            <img alt="Affinity" class="w-5 h-5 tool-icon" src="https://cdn.simpleicons.org/affinitydesigner"/>
+                            <div class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px] bg-white border border-black/5 text-gray-700 opacity-0 group-hover:opacity-100 transition">Affinity</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Service Item -->
+                    <div class="p-5 rounded-2xl liquid-glass transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="layout-template" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-900 mb-1" style="">Web Design</h3>
+                        <p class="text-xs text-gray-500">Creating intuitive user flows and high-fidelity visual systems in Figma.</p>
+                    </div>
+
+                    <!-- Service Item -->
+                    <div class="p-5 rounded-2xl liquid-glass transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="file-text" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-900 mb-1" style="">Content Creation</h3>
+                        <p class="text-xs text-gray-500">Implementation using Next.js and Tailwind with a focus on performance.</p>
+                    </div>
+
+                    <!-- Service Item -->
+                    <div class="p-5 rounded-2xl liquid-glass transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-600 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="palette" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-900 mb-1" style="">Graphic Design</h3>
+                        <p class="text-xs text-gray-500">Adding life to interfaces through micro-interactions and motion.</p>
+                    </div>
+
+                    <!-- Service Item -->
+                    <div class="p-5 rounded-2xl liquid-glass transition-all group">
+                        <div class="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="clapperboard" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-medium text-gray-900 mb-1" style="">Video Editing</h3>
+                        <p class="text-xs text-gray-500">Integrating Spline 3D elements for immersive web experiences.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="fade-in delay-500">
+            <div class="liquid-glass rounded-3xl relative overflow-hidden text-center sm:px-6 md:px-10 py-16 px-4">
+                
+                <!-- Soft radial glow -->
+                <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div class="absolute left-1/2 bottom-0 -translate-x-1/2 w-[60%] h-[80%] rounded-[40%] bg-gradient-to-t from-blue-100/50 to-transparent blur-3xl opacity-60"></div>
+                </div>
+            
+                <!-- Content Container -->
+                <div class="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+                    
+                    <!-- Eyebrow -->
+                    <div class="flex items-center justify-center gap-4 text-gray-400 text-sm mb-6">
+                        <span class="h-px w-12 bg-black/10"></span>
+                        <span class="italic font-medium text-gray-500">Reach out anytime</span>
+                        <span class="h-px w-12 bg-black/10"></span>
+                    </div>
+                
+                    <!-- Heading -->
+                    <h2 class="text-4xl sm:text-5xl text-gray-900 text-center font-semibold tracking-tight mb-4">
+                        Let’s Stay <span class="text-blue-600">Connected</span>
+                    </h2>
+                
+                    <!-- Copy -->
+                    <p class="text-sm sm:text-base text-gray-500 max-w-lg mx-auto text-center leading-relaxed font-light mb-8">
+                        Got questions or want to collaborate? Feel free to reach out—We’re open to new projects or just a casual chat!
+                    </p>
+                
+                    <!-- CTA -->
+                    <div class="flex justify-center mb-10">
+                        <a href="#contact" class="inline-flex items-center gap-2 h-12 px-8 rounded-full bg-gray-900 hover:bg-black text-white text-sm font-medium tracking-tight transition-all shadow-lg shadow-gray-200 hover:-translate-y-0.5 active:translate-y-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" strokewidth="1.5" class="lucide lucide-arrow-up-right w-4 h-4"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+                            Contact Me
+                        </a>
+                    </div>
+                
+                    <!-- Socials -->
+                    <div class="flex items-center justify-center gap-6 text-gray-400 mb-6">
+                        <a href="#" aria-label="X (Twitter)" class="p-2.5 rounded-full bg-white border border-black/5 hover:border-black/10 hover:text-gray-900 transition-colors shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="twitter" strokewidth="1.5" class="lucide lucide-twitter w-4 h-4"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+                        </a>
+                        <span class="h-6 w-px bg-black/5"></span>
+                        <a href="#" aria-label="Instagram" class="p-2.5 rounded-full bg-white border border-black/5 hover:border-black/10 hover:text-gray-900 transition-colors shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="instagram" strokewidth="1.5" class="lucide lucide-instagram w-4 h-4"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
+                        </a>
+                        <span class="h-6 w-px bg-black/5"></span>
+                        <a href="#" aria-label="Facebook" class="p-2.5 rounded-full bg-white border border-black/5 hover:border-black/10 hover:text-gray-900 transition-colors shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="facebook" strokewidth="1.5" class="lucide lucide-facebook w-4 h-4"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                        </a>
+                    </div>
+                
+                    <!-- Email -->
+                    <p class="text-center mb-8">
+                        <a href="mailto:hello@jhunly.com" class="text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">hello@jhunly.com</a>
+                    </p>
+                
+                    <!-- Bottom bar -->
+                    <div class="w-24 h-px bg-black/10 mb-6"></div>
+                    <div class="flex items-center justify-center text-[11px] text-gray-400 font-medium">
+                        <p>© <span id="year">2025</span> Jhunly</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <div id="photosOverlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+      <div id="photosWindow" class="app-window photos-window rounded-md w-[95vw] md:w-[80vw] lg:w-[70vw] h-[80vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform scale-95 opacity-0 transition duration-300 ease-out absolute overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="photos-title">
+        <div class="glass-effect"></div>
+        <div class="glass-tint"></div>
+        <div class="glass-shine"></div>
+        <div class="relative w-full h-full">
+          <div class="window-titlebar h-10 flex items-center px-3 select-none">
+            <div class="flex items-center gap-2">
+              <button type="button" id="photosClose" aria-label="Close" class="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-black/10"></button>
+              <button type="button" id="photosMinimize" aria-label="Minimize" class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-black/10"></button>
+              <button type="button" id="photosMaximize" aria-label="Enter Fullscreen" class="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-black/10"></button>
+            </div>
+            <div class="mx-auto text-[13px] font-medium text-gray-900" id="photos-title">Photos</div>
+          </div>
+          <div class="glass-content h-[calc(100%-40px)] w-full flex">
+            <aside id="photosSidebar" class="photos-sidebar w-56 p-4 hidden sm:block">
+              <div class="text-[12px] text-gray-700 mb-3">Library</div>
+              <div class="photos-list grid gap-2">
+                <button type="button" data-category="all" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span class="text-[12px]">All Photos</span></button>
+                <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6.5 3.5 5 5.5 5c1.54 0 3.04.99 3.57 2.36h.87C13 5.99 14.5 5 16.5 5 18.5 5 20 6.5 20 8.5c0 3.78-3.4 6.86-8.55 11.54z"/></svg><span class="text-[12px]">Favorites</span></button>
+                <button type="button" data-category="social" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Social Media Graphics</span></button>
+                <button type="button" data-category="ecommerce" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Ecommerce Graphics</span></button>
+                <button type="button" data-category="web" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Web designs</span></button>
+                <button type="button" data-category="content" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Content Creation</span></button>
+              </div>
+            </aside>
+            <section class="flex-1 h-full photos-scroll overflow-auto relative">
+              <div class="flex items-center justify-between px-4 py-2">
+              <div class="flex items-center gap-2">
+                  <button id="gridViewBtn" type="button" class="px-2.5 py-1.5 rounded-md bg-white/80 border border-gray-300 text-[12px] text-gray-800 hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-300">Grid</button>
+                  <button id="infoToggleBtn" type="button" class="px-2.5 py-1.5 rounded-md bg-white/80 border border-gray-300 text-[12px] text-gray-800 hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-300">Info</button>
+                </div>
+                <div class="text-[12px] text-gray-700" id="photosCount" aria-live="polite"></div>
+              </div>
+              <div id="gridLoading"><div class="grid-spinner"></div></div>
+              <div id="photosGrid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 px-4 pb-4"></div>
+            </section>
+            <div id="photoViewerModal" class="absolute inset-0 bg-black/90 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out flex items-center justify-center z-50">
+              <div id="viewerLeftZone" class="absolute inset-y-0 left-0 w-1/3 cursor-pointer" aria-label="Previous"></div>
+              <div id="viewerRightZone" class="absolute inset-y-0 right-0 w-1/3 cursor-pointer" aria-label="Next"></div>
+              <button id="navPrev" type="button" aria-label="Previous" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 text-white grid place-items-center z-10"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+              <button id="navNext" type="button" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 text-white grid place-items-center z-10"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+              <img id="viewerImage" alt="Photo" class="max-w-[92%] max-h-[86%] object-contain rounded-xl shadow-2xl" loading="eager" decoding="async">
+              <video id="viewerVideo" class="max-w-[92%] max-h-[86%] object-contain rounded-xl shadow-2xl hidden" controls playsinline></video>
+              <div id="photoMeta" class="absolute bottom-6 left-6 text-white/90 text-[12px] bg-white/10 border border-white/20 rounded-lg backdrop-blur px-3 py-2"></div>
+              <button id="viewerClose" type="button" aria-label="Close Viewer" class="absolute top-4 right-4 px-3 py-1.5 rounded-md bg-white text-gray-900 text-[12px]">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div class="dock-container h-16 px-3 flex items-center gap-2.5 rounded-[22px]">
+
+            <a href="#work" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="photos">
+                <div class="w-full h-full rounded-[14px] overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/photos.png" alt="Photos" class="dock-img" loading="lazy" decoding="async">
+                </div>
+                <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Photos</div>
+            </a>
+
+            <a href="mailto:hello@jhunly.com" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="mail">
+                <div class="w-full h-full rounded-[14px] overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Mail.png" alt="Mail" class="dock-img" loading="lazy" decoding="async">
+                </div>
+                <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Mail</div>
+            </a>
+
+            <a href="https://www.apple.com/safari/" target="_blank" rel="noopener" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="safari">
+                <div class="w-full h-full rounded-[14px] overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Safari.png" alt="Safari" class="dock-img" loading="lazy" decoding="async">
+                </div>
+                <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Safari</div>
+            </a>
+
+            <a href="#work" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="finder">
+                <div class="w-full h-full rounded-[14px] overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Finder.png" alt="Finder" class="dock-img" loading="lazy" decoding="async">
+                </div>
+                <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Finder</div>
+            </a>
+
+            <a href="#contact" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="settings">
+                <div class="w-full h-full rounded-[14px] overflow-hidden">
+                    <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Settings.png" alt="Settings" class="dock-img" loading="lazy" decoding="async">
+                </div>
+                <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Settings</div>
+            </a>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons({
+            attrs: {
+                strokeWidth: 1.5
+            }
+        });
+
+        // Update Clock
+        function updateTime() {
+            const now = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const day = days[now.getDay()];
+            let hours = now.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${day} ${hours}:${minutes} ${ampm}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // no-op
+
+        setTimeout(function(){ var el=document.getElementById('helloIntro'); if(el){ el.classList.add('fade-out'); setTimeout(function(){ el.style.display='none'; }, 900); } }, 3200);
+    </script>
+
+
+</body></html>
