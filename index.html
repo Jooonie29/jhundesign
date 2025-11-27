@@ -173,6 +173,9 @@
         .collage-dots { position: absolute; left: 50%; transform: translateX(-50%); bottom: 10px; display: flex; gap: 6px; z-index: 50; }
         .collage-dot { width: 6px; height: 6px; border-radius: 9999px; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.06); }
         .collage-dot.active { background: #111; border-color: rgba(0,0,0,0.2); }
+        .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(17,17,17,0.92); color: #fff; padding: 8px 12px; border-radius: 9999px; font-size: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 60; }
+        .copy-toast.visible { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+        :root { --viewer-overlay-bg: rgba(245, 245, 247, 0.767); --viewer-overlay-shadow: 0 10px 30px rgba(0,0,0,0.08); --viewer-btn-bg: rgba(255,255,255,0.96); --viewer-btn-border: rgba(0,0,0,0.1); --viewer-btn-icon: #111; --viewer-btn-shadow: 0 6px 16px rgba(0,0,0,0.08); --viewer-btn-hover-bg: #ffffff; --viewer-btn-hover-border: rgba(0,0,0,0.14); --viewer-btn-hover-shadow: 0 10px 20px rgba(0,0,0,0.10); }
         @media (prefers-reduced-motion: reduce) { .collage { display: none; } [data-collage-fallback] { display: block !important; } }
         .scroll-thumb { position: absolute; inset: 0; overflow: hidden; }
         .scroll-thumb::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 28px; background: linear-gradient(to bottom, rgba(0,0,0,0.22), rgba(0,0,0,0)); z-index: 5; pointer-events: none; }
@@ -188,10 +191,29 @@
             -webkit-backdrop-filter: blur(32px);
             border: 1px solid rgba(255,255,255,0.7);
             box-shadow: 0 0 6px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.25), inset -3px -3px 0.5px -3px rgba(255,255,255,0.18), inset 1px 1px 1px -0.5px rgba(255,255,255,0.35), inset -1px -1px 1px -0.5px rgba(255,255,255,0.2), inset 0 0 6px 6px rgba(255,255,255,0.06), inset 0 0 2px 2px rgba(255,255,255,0.03), 0 0 12px rgba(0,0,0,0.1) }
-        .photos-sidebar { position: relative; border-right: 1px solid rgba(255,255,255,0.24); }
+        .photos-sidebar { position: relative; border-right: 1px solid rgba(255,255,255,0.24); overflow-y: auto; max-height: 100%; }
         .photos-pill { transition: all 160ms ease; }
         
-        .photos-list button { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
+        .photos-list button { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; min-height: 40px; padding: 8px 12px; font-size: 12px; }
+        .photos-list svg { width: 16px; height: 16px; }
+        .mobile-categories { display: none; }
+        @media (max-width: 767px) {
+          .photos-window .glass-content { flex-direction: column; }
+          #photosSidebar { display: none !important; }
+          .mobile-categories { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 8px 16px; }
+          .mobile-categories .photos-pill, .mobile-categories button { flex: 0 0 auto; min-width: 140px; border-radius: 12px; }
+          .photos-list button { min-height: 44px; padding: 10px 14px; }
+          .photos-list span { font-size: 12px; }
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
+          .photos-sidebar { width: 220px; }
+          .photos-list button { min-height: 42px; }
+          .photos-list span { font-size: 12px; }
+        }
+        @media (min-width: 1200px) {
+          .photos-list button { min-height: 44px; }
+          .photos-list span { font-size: 13px; }
+        }
         .photos-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.3) transparent; }
         .photos-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
         .photos-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.3); border-radius: 6px; }
@@ -220,7 +242,10 @@
         @-webkit-keyframes spin { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
         @keyframes spin { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) { .photo-thumb { transition: none; } }
-        #photoViewerModal { backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); transition: backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+        #photoViewerModal { backdrop-filter: blur(32px) saturate(160%); -webkit-backdrop-filter: blur(32px) saturate(160%); background-color: var(--viewer-overlay-bg) !important; transition: backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms ease; color-scheme: light; }
+        #navPrev, #navNext { background-color: var(--viewer-btn-bg) !important; border-color: var(--viewer-btn-border) !important; color: var(--viewer-btn-icon) !important; box-shadow: var(--viewer-btn-shadow); transition: background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease; }
+        #navPrev:hover, #navNext:hover, #navPrev:focus-visible, #navNext:focus-visible { background-color: var(--viewer-btn-hover-bg) !important; border-color: var(--viewer-btn-hover-border) !important; box-shadow: var(--viewer-btn-hover-shadow); transform: translateY(-50%) scale(1.04); outline: none; }
+        #navPrev:active, #navNext:active { transform: translateY(-50%) scale(0.97); }
         html.scroll-locked, body.scroll-locked { overflow: hidden; }
         .scroll-lock-transition { transition: padding-right 200ms ease; }
     </style>
@@ -796,12 +821,28 @@
         var clickedSrc = lastClickedSrc;
         lastClickedSrc = null;
         var viewerVideo = document.getElementById('viewerVideo');
+        var vc = document.getElementById('videoControls');
+        var vcPlay = document.getElementById('vcPlay');
+        var vcProgress = document.getElementById('vcProgress');
+        var vcVolume = document.getElementById('vcVolume');
+        var vcFullscreen = document.getElementById('vcFullscreen');
         if(p.kind==='video'){
           viewerImage.classList.add('hidden');
           viewerVideo.classList.remove('hidden');
+          viewerVideo.controls = false;
+          viewerVideo.muted = false;
+          viewerVideo.playsInline = true;
           viewerVideo.src = clickedSrc ? clickedSrc : p.src;
-          function setMetaV(){ var iw = viewerVideo.videoWidth, ih = viewerVideo.videoHeight; metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; }
-          if(viewerVideo.readyState>=1) setMetaV(); else viewerVideo.addEventListener('loadedmetadata', setMetaV, { once: true });
+          function setMetaV(){ var iw = viewerVideo.videoWidth, ih = viewerVideo.videoHeight; if(metaBox){ metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; } }
+          function initControls(){ if(!vc) return; vc.classList.remove('hidden'); vcProgress.max = Math.max(0, viewerVideo.duration || 0); vcProgress.value = viewerVideo.currentTime || 0; try { viewerVideo.play(); } catch(e){} }
+          if(viewerVideo.readyState>=1){ setMetaV(); initControls(); } else { viewerVideo.addEventListener('loadedmetadata', function(){ setMetaV(); initControls(); }, { once: true }); }
+          if(vcPlay){ vcPlay.onclick = function(){ if(viewerVideo.paused){ viewerVideo.play(); vcPlay.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; } else { viewerVideo.pause(); vcPlay.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; } }; }
+          viewerVideo.addEventListener('play', function(){ if(vcPlay) vcPlay.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; });
+          viewerVideo.addEventListener('pause', function(){ if(vcPlay) vcPlay.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'; });
+          viewerVideo.addEventListener('timeupdate', function(){ try { if(vcProgress) vcProgress.value = viewerVideo.currentTime || 0; } catch(e){} });
+          if(vcProgress){ vcProgress.oninput = function(){ try { viewerVideo.currentTime = parseFloat(vcProgress.value||'0'); } catch(e){} }; }
+          if(vcVolume){ vcVolume.oninput = function(){ try { viewerVideo.volume = parseFloat(vcVolume.value||'1'); } catch(e){} }; }
+          if(vcFullscreen){ vcFullscreen.onclick = function(){ var rfs = viewerVideo.requestFullscreen || viewerVideo.webkitRequestFullscreen || viewerVideo.msRequestFullscreen; var efs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen; if(document.fullscreenElement){ if(efs) efs.call(document); } else { if(rfs) rfs.call(viewerVideo); } }; }
         } else {
           viewerVideo.classList.add('hidden');
           viewerImage.classList.remove('hidden');
@@ -818,8 +859,9 @@
             viewerImg.onerror = tryViewerNext;
           }
           viewerImg.alt = p.title;
-          function setMeta(){ var iw = viewerImg.naturalWidth, ih = viewerImg.naturalHeight; metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; }
+          function setMeta(){ var iw = viewerImg.naturalWidth, ih = viewerImg.naturalHeight; if(metaBox){ metaBox.textContent = p.title + ' • ' + (p.date || '') + ' • ' + iw + '×' + ih; } }
           if(viewerImg.complete) setMeta(); else viewerImg.addEventListener('load', setMeta, { once: true });
+          if(vc) vc.classList.add('hidden');
         }
         if(gridEl){
           gridEl.classList.remove('grid-hovering');
@@ -835,6 +877,7 @@
         modal.classList.add('pointer-events-none');
         modal.classList.remove('opacity-100');
         var viewerVideo = document.getElementById('viewerVideo');
+        var vc = document.getElementById('videoControls'); if(vc) vc.classList.add('hidden');
         if(viewerVideo){ try { viewerVideo.pause(); viewerVideo.removeAttribute('src'); viewerVideo.load(); } catch(e){} }
         if(gridEl){
           gridEl.removeAttribute('aria-hidden');
@@ -859,15 +902,7 @@
         var isMouse = (lastPointerType === 'mouse') || (lastPointerType === null && e.detail > 0);
         var idx = parseInt(t.dataset.index, 10);
         var p = photos[idx];
-        if(p && p.kind==='video' && isMouse){
-          var vidEl = t.querySelector('video.photo-thumb');
-          if(vidEl){
-            if(e.detail >= 2){ showViewer(idx); return; }
-            if(vidEl.paused){ vidEl.play().catch(function(){}); }
-            else { vidEl.pause(); }
-            return;
-          }
-        }
+        if(p && p.kind==='video' && isMouse){ showViewer(idx); return; }
         if(isMouse){
           var imgEl = t.querySelector('.photo-thumb');
           if(imgEl && !imgEl.classList.contains('is-fading')){
@@ -892,6 +927,7 @@
       document.addEventListener('keydown', function(e){
         if(overlay.classList.contains('pointer-events-none')) return;
         if(e.key==='Escape') { if(modal.classList.contains('opacity-100')) hideViewer(); else closeWindow(); }
+        if(e.key===' ' || e.code==='Space'){ var vv=document.getElementById('viewerVideo'); if(vv && !vv.classList.contains('hidden')) { e.preventDefault(); if(vv.paused) vv.play(); else vv.pause(); } }
         if(e.key==='ArrowRight') next();
         if(e.key==='ArrowLeft') prev();
       });
@@ -994,6 +1030,184 @@
           }
         });
       }
+      var exploreBtn = document.getElementById('exploreWorkBtn');
+      if(exploreBtn){
+        exploreBtn.addEventListener('click', function(){
+          var target = document.getElementById('work');
+          if(target){ target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+      }
+      function showCopiedToast(){
+        var t = document.getElementById('copyToast');
+        if(!t){ t = document.createElement('div'); t.id = 'copyToast'; t.className = 'copy-toast'; t.textContent = 'Email copied'; document.body.appendChild(t); }
+        t.classList.add('visible');
+        setTimeout(function(){ t.classList.remove('visible'); }, 1600);
+      }
+      var copyBtn = document.getElementById('copyEmailBtn');
+      if(copyBtn){
+        copyBtn.addEventListener('click', function(){
+          var text = 'jhunlytap@gmail.com';
+          function done(){ showCopiedToast(); }
+          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }); }
+          else { var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+        });
+      }
+      var settingsOverlay = document.getElementById('settingsOverlay');
+      var settingsWindow = document.getElementById('settingsWindow');
+      var settingsClose = document.getElementById('settingsClose');
+      var settingsMinimize = document.getElementById('settingsMinimize');
+      var settingsMaximize = document.getElementById('settingsMaximize');
+      var settingsOpener = document.querySelector('[data-app="settings"]');
+      function esc(s){ return (s==null?'' : String(s)).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); }
+      function populatePersonalInfo(){
+        var data = {
+          name: 'Jhunly D. Tapaya',
+          title: 'Graphic Designer / Video Editor',
+          phone: '09539787115',
+          email: 'jhunlytap@gmail.com',
+          website: 'https://jooonie29.github.io/jhundesign/https://jhunlyportfolio.framer.website',
+          location: 'General Santos City, South Cotabato'
+        };
+        var card = document.getElementById('personalInfoCard');
+        if(!card) return;
+        var tel = data.phone.replace(/[^0-9+]/g, '');
+        var host = '';
+        try { host = new URL(data.website).hostname; } catch(e) { host = data.website; }
+        card.innerHTML = ''+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Name</span><span class="text-gray-900 text-[12px]">'+esc(data.name)+'</span></div>'+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Title</span><span class="text-gray-900 text-[12px]">'+esc(data.title)+'</span></div>'+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Phone</span><a class="text-blue-600 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-300 rounded" href="tel:'+tel+'">'+esc(data.phone)+'</a></div>'+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Email</span><a class="text-blue-600 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-300 rounded" href="mailto:'+esc(data.email)+'">'+esc(data.email)+'</a></div>'+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Website</span><a class="text-blue-600 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-300 rounded" target="_blank" rel="noopener" href="'+esc(data.website)+'">'+esc(host)+'</a></div>'+
+          '<div class="flex items-center justify-between"><span class="text-gray-700 text-[12px]">Location</span><span class="text-gray-900 text-[12px]">'+esc(data.location)+'</span></div>'
+      }
+      function getExperienceData(){
+        return [
+          { company: 'Collabor8VA', title: 'Multimedia Artist', start: 'December 2024', end: 'Present', description: 'A virtual assistant team helping authors, entrepreneurs, and coaches grow through marketing and task management.', skills: null },
+          { company: 'Your Digital Team', title: 'Graphic Designer', start: 'December 2024', end: 'August 2025', description: 'Australian-based company that helps businesses grow locally and globally with expert digital marketing.', skills: null },
+          { company: 'MSU - GSC', title: 'Layout Artist', start: '2023', end: '2024', description: 'Designed engaging layouts for the Office of Student Affairs, creating visuals for publications and campus events.', skills: null },
+          { company: '8oz Enterprises', title: 'Graphic Designer', start: '2022', end: '2023', description: 'Provided high-quality print products, marketing materials, business stationery, customized merchandise, and signage solutions.', skills: null }
+        ];
+      }
+      function parseDate(s){
+        if(!s) return null;
+        if(/present/i.test(s)) return new Date(8640000000000000);
+        var m = s.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
+        if(m){ return new Date(Date.parse(m[0])); }
+        var y = s.match(/\b(\d{4})\b/);
+        if(y){ return new Date(parseInt(y[1],10),0,1); }
+        return null;
+      }
+      function validateExperienceData(items){
+        var issues = [];
+        items.forEach(function(it, idx){
+          ['company','title','start'].forEach(function(k){ if(!it[k]) issues.push('Missing '+k+' for item '+(idx+1)); });
+          if(!it.end) issues.push('Missing end for item '+(idx+1));
+          if(!it.description) issues.push('Missing description for item '+(idx+1));
+        });
+        return issues;
+      }
+      function populateExperience(){
+        var card = document.getElementById('experienceCard');
+        if(!card) return;
+        var data;
+        try { data = getExperienceData(); } catch(e){ data = []; }
+        var issues = validateExperienceData(data);
+        data.sort(function(a,b){ var ae=parseDate(a.end), be=parseDate(b.end); var ap=/present/i.test(a.end), bp=/present/i.test(b.end); if(ap&&!bp) return -1; if(bp&&!ap) return 1; if(ae&&be) return be - ae; return 0; });
+        var html = '';
+        if(issues.length){ html += '<div role="alert" class="mb-3 rounded-lg border border-red-300 bg-white text-red-600 text-[12px] px-3 py-2">'+esc(issues.join('; '))+'</div>'; }
+        data.forEach(function(it, i){
+          var id = 'exp_'+i;
+          var range = esc(it.start + ' – ' + it.end);
+          var tech = it.skills ? esc(it.skills.join(', ')) : 'Not specified in source image';
+          html += ''+
+            '<article role="listitem" aria-labelledby="'+id+'" class="grid gap-2 sm:grid-cols-2 sm:items-start py-3 border-t border-black/10 first:border-t-0">'+
+              '<div>'+
+                '<h4 id="'+id+'" class="text-[12px] font-semibold text-gray-900">'+esc(it.company)+'</h4>'+
+                '<div class="text-[11px] text-gray-600">'+range+'</div>'+
+              '</div>'+
+              '<div class="grid gap-1">'+
+                '<div class="text-[12px] text-gray-900">'+esc(it.title)+'</div>'+
+                '<p class="text-[12px] text-gray-700">'+esc(it.description)+'</p>'+
+                '<div class="text-[11px] text-gray-500">Technologies: '+tech+'</div>'+
+              '</div>'+
+            '</article>';
+        });
+        card.innerHTML = html;
+      }
+      settingsOverlay && settingsOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
+      settingsOverlay && settingsOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      var settingsScroll = settingsWindow ? settingsWindow.querySelector('.settings-scroll') : null;
+      function stopSettingsScroll(e){ e.stopPropagation(); }
+      settingsWindow && settingsWindow.addEventListener('wheel', stopSettingsScroll, { passive: true });
+      settingsWindow && settingsWindow.addEventListener('touchmove', stopSettingsScroll, { passive: true });
+      settingsScroll && settingsScroll.addEventListener('wheel', stopSettingsScroll, { passive: true });
+      settingsScroll && settingsScroll.addEventListener('touchmove', stopSettingsScroll, { passive: true });
+      function openSettings(){
+        settingsOverlay.classList.remove('pointer-events-none');
+        settingsOverlay.classList.add('opacity-100');
+        lockScroll();
+        populatePersonalInfo();
+        populateExperience();
+        requestAnimationFrame(function(){
+          settingsWindow.classList.remove('opacity-0');
+          settingsWindow.classList.remove('scale-95');
+          settingsWindow.classList.add('opacity-100');
+          settingsWindow.classList.add('scale-100');
+        });
+        settingsClose && settingsClose.focus();
+      }
+      function closeSettings(){
+        settingsWindow.classList.remove('opacity-100');
+        settingsWindow.classList.add('opacity-0');
+        settingsWindow.classList.remove('scale-100');
+        settingsWindow.classList.add('scale-95');
+        settingsOverlay.classList.remove('opacity-100');
+        settingsOverlay.classList.add('opacity-0');
+        setTimeout(function(){ settingsOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+      }
+      settingsOpener && settingsOpener.addEventListener('click', function(e){ e.preventDefault(); openSettings(); });
+      settingsClose && settingsClose.addEventListener('click', closeSettings);
+      settingsMinimize && settingsMinimize.addEventListener('click', closeSettings);
+      settingsMaximize && settingsMaximize.addEventListener('click', function(){ var rfs = settingsWindow.requestFullscreen || settingsWindow.webkitRequestFullscreen || settingsWindow.msRequestFullscreen; if(rfs) rfs.call(settingsWindow); });
+      document.addEventListener('keydown', function(e){ if(!settingsOverlay || settingsOverlay.classList.contains('pointer-events-none')) return; if(e.key==='Escape'){ closeSettings(); } });
+
+      var safariOverlay = document.getElementById('safariOverlay');
+      var safariWindow = document.getElementById('safariWindow');
+      var safariClose = document.getElementById('safariClose');
+      var safariMinimize = document.getElementById('safariMinimize');
+      var safariMaximize = document.getElementById('safariMaximize');
+      var safariOpener = document.querySelector('[data-app="safari"]');
+      function openSafari(){
+        safariOverlay.classList.remove('pointer-events-none');
+        safariOverlay.classList.add('opacity-100');
+        lockScroll();
+        requestAnimationFrame(function(){
+          safariWindow.classList.remove('opacity-0');
+          safariWindow.classList.remove('scale-95');
+          safariWindow.classList.add('opacity-100');
+          safariWindow.classList.add('scale-100');
+        });
+        safariClose && safariClose.focus();
+      }
+      function closeSafari(){
+        safariWindow.classList.remove('opacity-100');
+        safariWindow.classList.add('opacity-0');
+        safariWindow.classList.remove('scale-100');
+        safariWindow.classList.add('scale-95');
+        safariOverlay.classList.remove('opacity-100');
+        safariOverlay.classList.add('opacity-0');
+        setTimeout(function(){ safariOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+      }
+      safariOverlay && safariOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
+      safariOverlay && safariOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      safariWindow && safariWindow.addEventListener('wheel', function(e){ e.stopPropagation(); }, { passive: true });
+      safariWindow && safariWindow.addEventListener('touchmove', function(e){ e.stopPropagation(); }, { passive: true });
+      safariOpener && safariOpener.addEventListener('click', function(e){ e.preventDefault(); openSafari(); });
+      safariClose && safariClose.addEventListener('click', closeSafari);
+      safariMinimize && safariMinimize.addEventListener('click', closeSafari);
+      safariMaximize && safariMaximize.addEventListener('click', function(){ var rfs = safariWindow.requestFullscreen || safariWindow.webkitRequestFullscreen || safariWindow.msRequestFullscreen; if(rfs) rfs.call(safariWindow); });
+      document.addEventListener('keydown', function(e){ if(!safariOverlay || safariOverlay.classList.contains('pointer-events-none')) return; if(e.key==='Escape'){ closeSafari(); } });
     });
   </script>
   
@@ -1019,8 +1233,111 @@
             <div class="absolute top-1/3 left-1/4 w-[500px] h-[300px] bg-gradient-to-r from-blue-400 to-sky-300 rounded-full mix-blend-multiply blur-[96px] opacity-60 animate-blob-2"></div>
             <div class="absolute top-[40%] left-[45%] w-[450px] h-[450px] bg-blue-600 rounded-full mix-blend-multiply blur-[128px] opacity-50 animate-blob-1"></div>
             <div class="absolute top-1/2 left-[40%] w-[300px] h-[300px] bg-cyan-300 rounded-full mix-blend-multiply blur-[80px] opacity-60 animate-blob-3"></div>
-        </div>
     </div>
+  </div>
+
+  <div id="settingsOverlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+    <div id="settingsWindow" class="app-window photos-window rounded-md w-[95vw] md:w-[80vw] lg:w-[70vw] h-[80vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform scale-95 opacity-0 transition duration-300 ease-out absolute overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="glass-effect"></div>
+      <div class="glass-tint"></div>
+      <div class="glass-shine"></div>
+      <div class="relative w-full h-full">
+        <div class="window-titlebar h-10 flex items-center px-3 select-none">
+          <div class="flex items-center gap-2">
+            <button type="button" id="settingsClose" aria-label="Close" class="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-black/10"></button>
+            <button type="button" id="settingsMinimize" aria-label="Minimize" class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-black/10"></button>
+            <button type="button" id="settingsMaximize" aria-label="Enter Fullscreen" class="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-black/10"></button>
+          </div>
+          <div class="mx-auto text-[13px] font-medium text-gray-900" id="settings-title">Settings</div>
+        </div>
+        <div class="glass-content h-[calc(100%-40px)] w-full flex">
+          <aside class="photos-sidebar w-56 p-4 hidden sm:block">
+            <div class="text-[12px] text-gray-700 mb-3">System Settings</div>
+            <div class="grid gap-2">
+              <button type="button" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-300"><span class="text-[12px]">Personal Information</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Wi‑Fi</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Bluetooth</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Network</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Notifications</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Sound</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">General</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><span class="text-[12px]">Accessibility</span></button>
+            </div>
+          </aside>
+          <section class="flex-1 h-full settings-scroll overflow-auto relative" aria-labelledby="settings-title" aria-describedby="settings-desc">
+            <div class="px-4 py-4">
+              <div id="settings-desc" class="text-sm text-gray-900 font-medium mb-4">Personal Information</div>
+              <div id="personalInfoCard" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3" role="group" aria-label="Personal Information"></div>
+              <div class="mt-6 text-sm text-gray-900 font-medium mb-2" id="experienceHeader">Professional Experience</div>
+              <div id="experienceCard" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-2 sm:p-4 grid gap-1" role="list" aria-label="Professional Experience"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="safariOverlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+    <div id="safariWindow" class="app-window photos-window rounded-md w-[95vw] md:w-[80vw] lg:w-[70vw] h-[80vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform scale-95 opacity-0 transition duration-300 ease-out absolute overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="safari-title">
+      <div class="glass-effect"></div>
+      <div class="glass-tint"></div>
+      <div class="glass-shine"></div>
+      <div class="relative w-full h-full">
+        <div class="window-titlebar h-10 flex items-center px-3 select-none">
+          <div class="flex items-center gap-2">
+            <button type="button" id="safariClose" aria-label="Close" class="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-black/10"></button>
+            <button type="button" id="safariMinimize" aria-label="Minimize" class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-black/10"></button>
+            <button type="button" id="safariMaximize" aria-label="Enter Fullscreen" class="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-black/10"></button>
+          </div>
+          <div class="mx-auto text-[13px] font-medium text-gray-900" id="safari-title">Safari</div>
+        </div>
+        <div class="glass-content h-[calc(100%-40px)] w-full flex">
+          <section class="flex-1 h-full overflow-auto relative" aria-labelledby="safari-title">
+            <div class="p-4 space-y-6">
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-800 flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                  <input type="text" placeholder="Search or enter website name" class="flex-1 bg-transparent outline-none text-[13px]" aria-label="Address Bar">
+                </div>
+                <button type="button" class="w-9 h-9 rounded-xl bg-white/80 border border-gray-300 text-gray-800 grid place-items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="14" x="3" y="4" rx="2" ry="2"></rect><path d="M7 20h10"></path></svg>
+                </button>
+              </div>
+              <div>
+                <div class="text-[12px] text-gray-700 mb-2">Favorites</div>
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-4">
+                  <a href="https://www.apple.com" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold"></div>
+                    <div class="text-[12px] text-gray-700">Apple</div>
+                  </a>
+                  <a href="https://figma.com" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">F</div>
+                    <div class="text-[12px] text-gray-700">Figma</div>
+                  </a>
+                  <a href="https://dribbble.com" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">D</div>
+                    <div class="text-[12px] text-gray-700">Dribbble</div>
+                  </a>
+                  <a href="https://behance.net" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">B</div>
+                    <div class="text-[12px] text-gray-700">Behance</div>
+                  </a>
+                  <a href="https://twitter.com" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">X</div>
+                    <div class="text-[12px] text-gray-700">Twitter</div>
+                  </a>
+                  <a href="https://dropbox.com" target="_blank" rel="noopener" class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">DB</div>
+                    <div class="text-[12px] text-gray-700">Dropbox</div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <!-- Mac Menu Bar -->
     <nav class="fixed top-0 w-full z-50 h-9 px-4 flex justify-between items-center text-[13px] font-medium bg-white/70 backdrop-blur-xl border-b border-black/[0.03] text-gray-900 select-none">
@@ -1068,11 +1385,11 @@
             </p>
 
             <div class="flex gap-4">
-                <button class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:scale-105 transition-transform active:scale-95 flex items-center gap-2 shadow-lg shadow-gray-200">
+                <button id="exploreWorkBtn" class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:scale-105 transition-transform active:scale-95 flex items-center gap-2 shadow-lg shadow-gray-200">
                     <span class="">Explore Work</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-down" strokewidth="1.5" class="lucide lucide-arrow-down w-4 h-4"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
                 </button>
-                <button class="liquid-glass-button text-white/90 h-10 px-6 rounded-full font-medium text-sm">
+                <button id="copyEmailBtn" class="liquid-glass-button text-white/90 h-10 px-6 rounded-full font-medium text-sm">
                     Copy Email
                 </button>
             </div>
@@ -1336,7 +1653,6 @@
               <div class="text-[12px] text-gray-700 mb-3">Library</div>
               <div class="photos-list grid gap-2">
                 <button type="button" data-category="all" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span class="text-[12px]">All Photos</span></button>
-                <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6.5 3.5 5 5.5 5c1.54 0 3.04.99 3.57 2.36h.87C13 5.99 14.5 5 16.5 5 18.5 5 20 6.5 20 8.5c0 3.78-3.4 6.86-8.55 11.54z"/></svg><span class="text-[12px]">Favorites</span></button>
                 <button type="button" data-category="social" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Social Media Graphics</span></button>
                 <button type="button" data-category="ecommerce" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Ecommerce Graphics</span></button>
                 <button type="button" data-category="web" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Web designs</span></button>
@@ -1345,11 +1661,20 @@
             </aside>
             <section class="flex-1 h-full photos-scroll overflow-auto relative">
               <div class="flex items-center justify-between px-4 py-2">
-              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2">
                   <button id="gridViewBtn" type="button" class="px-2.5 py-1.5 rounded-md bg-white/80 border border-gray-300 text-[12px] text-gray-800 hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-300">Grid</button>
                   <button id="infoToggleBtn" type="button" class="px-2.5 py-1.5 rounded-md bg-white/80 border border-gray-300 text-[12px] text-gray-800 hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-gray-300">Info</button>
                 </div>
                 <div class="text-[12px] text-gray-700" id="photosCount" aria-live="polite"></div>
+              </div>
+              <div class="sm:hidden">
+                <div class="mobile-categories photos-list" role="group" aria-label="Categories">
+                  <button type="button" data-category="all" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="M21 15l-5-5L5 21"></path></svg><span class="text-[12px]">All Photos</span></button>
+                  <button type="button" data-category="social" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Social Media Graphics</span></button>
+                  <button type="button" data-category="ecommerce" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Ecommerce Graphics</span></button>
+                  <button type="button" data-category="web" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Web designs</span></button>
+                  <button type="button" data-category="content" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg><span class="text-[12px]">Content Creation</span></button>
+                </div>
               </div>
               <div id="gridLoading"><div class="grid-spinner"></div></div>
               <div id="photosGrid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 px-4 pb-4"></div>
@@ -1361,7 +1686,12 @@
               <button id="navNext" type="button" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 text-white grid place-items-center z-10"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
               <img id="viewerImage" alt="Photo" class="max-w-[92%] max-h-[86%] object-contain rounded-xl shadow-2xl" loading="eager" decoding="async">
               <video id="viewerVideo" class="max-w-[92%] max-h-[86%] object-contain rounded-xl shadow-2xl hidden" controls playsinline></video>
-              <div id="photoMeta" class="absolute bottom-6 left-6 text-white/90 text-[12px] bg-white/10 border border-white/20 rounded-lg backdrop-blur px-3 py-2"></div>
+              <div id="videoControls" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white/10 border border-white/20 rounded-2xl backdrop-blur px-3 py-2 hidden">
+                <button id="vcPlay" type="button" aria-label="Play/Pause" class="w-9 h-9 rounded-full bg-white/10 border border-white/20 text-white grid place-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+                <input id="vcProgress" type="range" min="0" value="0" step="any" class="w-48 sm:w-64" aria-label="Progress">
+                <input id="vcVolume" type="range" min="0" max="1" step="0.01" value="1" class="w-24" aria-label="Volume">
+                <button id="vcFullscreen" type="button" aria-label="Fullscreen" class="w-9 h-9 rounded-full bg-white/10 border border-white/20 text-white grid place-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 15v6h-6"></path><path d="M3 9V3h6"></path></svg></button>
+              </div>
               <button id="viewerClose" type="button" aria-label="Close Viewer" class="absolute top-4 right-4 px-3 py-1.5 rounded-md bg-white text-gray-900 text-[12px]">Close</button>
             </div>
           </div>
@@ -1387,12 +1717,12 @@
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Mail</div>
             </a>
 
-            <a href="https://www.apple.com/safari/" target="_blank" rel="noopener" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="safari">
+            <button type="button" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="safari">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
                     <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Safari.png" alt="Safari" class="dock-img" loading="lazy" decoding="async">
                 </div>
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Safari</div>
-            </a>
+            </button>
 
             <a href="#work" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="finder">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
