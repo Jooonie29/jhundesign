@@ -166,7 +166,13 @@
         .collage-layer img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.06) translateZ(0); animation: kenburns var(--kenburns-duration) ease-in-out infinite alternate; }
         .collage.paused .collage-layer img { animation-play-state: paused; }
         @keyframes kenburns { 0% { transform: scale(1.06) translate3d(-1.5%, -1.5%, 0); } 100% { transform: scale(1.12) translate3d(1.5%, 1.5%, 0); } }
-        .collage-control { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 10px; border-radius: 9999px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.08); color: #111; }
+        .collage-control { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 10px; border-radius: 9999px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.08); color: #111; z-index: 50; pointer-events: none; }
+        .collage-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 9999px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.08); color: #111; display: grid; place-items: center; z-index: 50; }
+        .collage-nav.prev { left: 10px; }
+        .collage-nav.next { right: 10px; }
+        .collage-dots { position: absolute; left: 50%; transform: translateX(-50%); bottom: 10px; display: flex; gap: 6px; z-index: 50; }
+        .collage-dot { width: 6px; height: 6px; border-radius: 9999px; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.06); }
+        .collage-dot.active { background: #111; border-color: rgba(0,0,0,0.2); }
         @media (prefers-reduced-motion: reduce) { .collage { display: none; } [data-collage-fallback] { display: block !important; } }
         .scroll-thumb { position: absolute; inset: 0; overflow: hidden; }
         .scroll-thumb::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 28px; background: linear-gradient(to bottom, rgba(0,0,0,0.22), rgba(0,0,0,0)); z-index: 5; pointer-events: none; }
@@ -230,14 +236,6 @@
       }
       var collages = document.querySelectorAll('.collage');
       collages.forEach(function(el){
-        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var lowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
-        if(reduce || lowEnd){
-          el.style.display = 'none';
-          var fb = el.parentElement.querySelector('[data-collage-fallback]');
-          if(fb) fb.style.display = 'block';
-          return;
-        }
         var visibleTime = parseInt(el.getAttribute('data-speed') || '5000', 10); // per-image display time
         var transitionTime = parseInt(el.getAttribute('data-transition') || '800', 10); // fade duration
         el.style.setProperty('--kenburns-duration', (visibleTime/1000)+'s');
@@ -251,24 +249,35 @@
             if(/^https?:\/\//.test(s)) return s;
             if(s.startsWith('./') || s.startsWith('/')) return s;
             return prefix + s;
-          });
+          }).filter(function(s){ return !!s && /\.(jpg|jpeg|png|gif)$/i.test(s); });
         } else {
           for(var i=1;i<=8;i++){ images.push(prefix + 'poster_'+String(i).padStart(2,'0')+'.jpg'); }
         }
         // Allow png variants if jpg missing; we attempt load and fallback
         function setSrc(img, src){
-          img.loading='lazy';
-          img.decoding='async';
-          img.onerror=function(){ img.onerror=null; img.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'; };
+          img.loading='eager';
+          img.decoding='sync';
           var isGit = /raw\.githubusercontent\.com|cdn\.jsdelivr\.net/.test(src);
-          img.src = isGit ? src : (src + (src.indexOf('?')===-1 ? '?w=1440' : '&w=1440'));
+          var optimized = '/_optimized/?src=' + encodeURIComponent(src) + '&w=1440&fmt=webp';
+          var raw = src;
+          var alt = src.replace(/raw\.githubusercontent\.com\/JHUN062901\/Portfolio\/main\/assets\//, 'cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets/');
+          var fallbackQueue = isGit ? [optimized, raw, alt] : [src + (src.indexOf('?')===-1 ? '?w=1440' : '&w=1440')];
+          function tryNext(){
+            if(!fallbackQueue.length){ img.onerror=null; img.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'; return; }
+            var next = fallbackQueue.shift();
+            img.onerror = tryNext;
+            img.src = next;
+          }
+          img.onerror = tryNext;
+          tryNext();
+          setTimeout(function(){ if(!img.complete || !img.naturalWidth){ tryNext(); } }, 1200);
         }
         var layers = el.querySelectorAll('.collage-layer img');
         if(layers.length<2) return;
         var activeLayer = 0, current = 0, timer;
         // preload helper
         function preload(src){ var p = new Image(); p.src = src; return (p.decode ? p.decode().catch(function(){}) : Promise.resolve()); }
-        function show(index){ setSrc(layers[activeLayer], images[index]); el.querySelectorAll('.collage-layer')[activeLayer].classList.add('active'); }
+        function show(index){ setSrc(layers[activeLayer], images[index]); el.querySelectorAll('.collage-layer')[activeLayer].classList.add('active'); updateDots(); }
         function hideOther(){ el.querySelectorAll('.collage-layer')[1-activeLayer].classList.remove('active'); }
         function schedule(){ timer = setTimeout(step, visibleTime); }
         function step(){
@@ -280,26 +289,47 @@
           el.querySelectorAll('.collage-layer')[activeLayer].classList.remove('active');
           activeLayer = targetLayer;
           current = nextIndex;
-          setTimeout(function(){ schedule(); }, transitionTime);
+          schedule(); updateDots();
         }
+        function goTo(index){
+          var targetLayer = 1 - activeLayer;
+          preload(images[index]).then(function(){ setSrc(layers[targetLayer], images[index]); });
+          el.querySelectorAll('.collage-layer')[targetLayer].classList.add('active');
+          el.querySelectorAll('.collage-layer')[activeLayer].classList.remove('active');
+          activeLayer = targetLayer;
+          current = index;
+          schedule(); updateDots();
+        }
+        var prevBtn = el.parentElement.querySelector('.collage-nav.prev');
+        var nextBtn = el.parentElement.querySelector('.collage-nav.next');
+        var dotsWrap = el.parentElement.querySelector('.collage-dots');
+        var dots = [];
+        function updateDots(){
+          if(!dotsWrap) return;
+          if(!dots.length){
+            dotsWrap.innerHTML = '';
+            images.forEach(function(_, i){
+              var d = document.createElement('button');
+              d.type = 'button';
+              d.className = 'collage-dot' + (i===current ? ' active' : '');
+              d.setAttribute('aria-label', 'Slide '+(i+1));
+              d.dataset.index = i;
+              d.addEventListener('click', function(ev){ clearTimeout(timer); var idx = parseInt(ev.currentTarget.dataset.index, 10) || 0; if(idx===current) { schedule(); return; } goTo(idx); });
+              dotsWrap.appendChild(d);
+              dots.push(d);
+            });
+          } else {
+            dots.forEach(function(d, i){ d.classList.toggle('active', i===current); });
+          }
+        }
+        if(prevBtn) prevBtn.addEventListener('click', function(){ clearTimeout(timer); var idx = (current - 1 + images.length) % images.length; goTo(idx); });
+        if(nextBtn) nextBtn.addEventListener('click', function(){ clearTimeout(timer); var idx = (current + 1) % images.length; goTo(idx); });
         show(current); preload(images[(current+1)%images.length]).then(function(){ setSrc(layers[1], images[1]); }); hideOther(); schedule();
-        var btn = el.querySelector('.collage-control');
-        if(btn){
-          var playing = true;
-          btn.addEventListener('click', function(){
-            playing = !playing;
-            btn.textContent = playing ? 'Pause' : 'Play';
-            btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
-            btn.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Play slideshow');
-            if(!playing){ clearTimeout(timer); }
-            else { schedule(); }
-          });
-        }
-        // Pause on hover/focus
+        // Indicator only; no button behavior
         el.addEventListener('mouseenter', function(){ clearTimeout(timer); el.classList.add('paused'); });
-        el.addEventListener('mouseleave', function(){ if(btn && btn.getAttribute('aria-pressed')==='true'){ el.classList.remove('paused'); schedule(); } });
+        el.addEventListener('mouseleave', function(){ el.classList.remove('paused'); schedule(); });
         el.addEventListener('focusin', function(){ clearTimeout(timer); el.classList.add('paused'); });
-        el.addEventListener('focusout', function(){ if(btn && btn.getAttribute('aria-pressed')==='true'){ el.classList.remove('paused'); schedule(); } });
+        el.addEventListener('focusout', function(){ el.classList.remove('paused'); schedule(); });
         // Keyboard controls
         el.addEventListener('keydown', function(e){
           if(e.code==='Space'){ e.preventDefault(); btn && btn.click(); }
@@ -473,15 +503,35 @@
             var api = 'https://api.github.com/repos/JHUN062901/Portfolio/contents/assets';
             return fetch(api, { headers: { 'Accept': 'application/vnd.github.v3+json' }, cache: 'no-store', mode: 'cors' })
               .then(function(r){ if(!r.ok) throw new Error('fail'); return r.json(); })
-              .then(function(arr){ var list = arr.filter(function(it){ return it.type==='file' && allow.test(it.name); }); list.forEach(function(it){ if(it && it.name) versionMap[it.name] = ((it.sha||'') + '-' + it.name); }); finalize(list.map(function(it){ return it.name; })); });
+              .then(function(arr){ var list = arr.filter(function(it){ return it.type==='file' && allow.test(it.name); }); list.forEach(function(it){ if(it && it.name) versionMap[it.name] = ((it.sha||'') + '-' + it.name); }); return list.map(function(it){ return it.name; }); });
           }
           function fromJsDelivr(){
             var alt = 'https://data.jsdelivr.com/v1/package/gh/JHUN062901/Portfolio@main';
             return fetch(alt, { cache: 'no-store', mode: 'cors' })
               .then(function(r){ if(!r.ok) throw new Error('fail'); return r.json(); })
-              .then(function(json){ var files = (json && json.files) ? json.files : []; var list = files.filter(function(f){ return f.type==='file' && /^assets\//.test(f.name) && allow.test(f.name); }); list.forEach(function(f){ var n = f.name.replace(/^assets\//,''); versionMap[n] = ((f.hash || (''+(f.time||''))) + '-' + n); }); finalize(list.map(function(f){ return f.name.replace(/^assets\//,''); })); });
+              .then(function(json){ var files = (json && json.files) ? json.files : []; var list = files.filter(function(f){ return f.type==='file' && /^assets\//.test(f.name) && allow.test(f.name); }); list.forEach(function(f){ var n = f.name.replace(/^assets\//,''); versionMap[n] = ((f.hash || (''+(f.time||''))) + '-' + n); }); return list.map(function(f){ return f.name.replace(/^assets\//,''); }); });
           }
-          fromGithub().catch(function(){ fromJsDelivr().catch(function(){ resolve([]); }); }).finally(function(){ scanPromises[cat] = null; });
+          function enumerateByPrefix(){
+            var base = c.remote || (assetBaseRemote.replace(/\/$/, '') + '/assets');
+            var names = [];
+            var max = 50;
+            if(cat==='web'){
+              for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('Web_'+n+'.'+ext); }); }
+            } else if(cat==='social'){
+              for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('Socialmedia_'+n+'.'+ext); }); }
+            } else if(cat==='ecommerce'){
+              for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('Ecommerce_'+n+'.'+ext); }); }
+            } else if(cat==='content'){
+              for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('content_'+n+'.'+ext); }); ['mp4','webm','mov','avi'].forEach(function(ext){ names.push('Content_'+n+'.'+ext); }); }
+            }
+            var checks = names.map(function(fname){ var url = base + '/' + fname; return fetch(url, { method: 'HEAD', cache: 'no-store', mode: 'cors' }).then(function(r){ return (r && r.ok) ? fname : null; }).catch(function(){ return null; }); });
+            return Promise.all(checks).then(function(arr){ return arr.filter(function(x){ return !!x; }); });
+          }
+          Promise.resolve().then(function(){ return fromGithub(); }).catch(function(){ return []; })
+            .then(function(list){ if(list && list.length) return list; return Promise.resolve().then(function(){ return fromJsDelivr(); }).catch(function(){ return []; }); })
+            .then(function(list){ if(list && list.length){ finalize(list); return; } return enumerateByPrefix().then(function(names){ finalize(names||[]); }); })
+            .catch(function(){ resolve([]); })
+            .finally(function(){ scanPromises[cat] = null; });
         });
         scanPromises[cat] = promise;
         return promise;
@@ -1048,12 +1098,14 @@
                 <!-- Main Feature -->
                 <div class="md:col-span-2 md:row-span-2 group relative rounded-3xl overflow-hidden bg-gray-900 border border-black/5 cursor-pointer fade-in delay-200 shadow-sm">
                     <div class="absolute inset-0 bg-gradient-to-tr from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="collage absolute inset-0 group-hover:scale-105 transition-all duration-700 ease-out opacity-80" data-speed="5000" data-transition="800" aria-label="Graphic design collage" role="region" aria-roledescription="slideshow" aria-live="polite" tabindex="0" data-base="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Social%20Media%20Graphics" data-images="Socialmedia_01.jpg, Socialmedia_02.jpg, Socialmedia_03.jpg, Socialmedia_04.jpg, Socialmedia_05.jpg, Socialmedia_06.jpg, Socialmedia_07.jpg, Socialmedia_08.jpg, Socialmedia_09.jpg, Socialmedia_10.jpg, Socialmedia_11.jpg, Socialmedia_12.jpg">
+                        <div class="collage absolute inset-0 group-hover:scale-105 transition-all duration-700 ease-out opacity-80" data-speed="5000" data-transition="800" aria-label="Graphic design collage" role="region" aria-roledescription="slideshow" aria-live="polite" tabindex="0" data-base="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/"
+                        data-images="poster_01.jpg, poster_02.jpg, 
+                        poster_03.jpg, 
+                        poster_04.jpg,">
                         <div class="collage-layer active"><img alt="Poster" class="w-full h-full object-cover" /></div>
                         <div class="collage-layer"><img alt="Poster" class="w-full h-full object-cover" /></div>
-                        <button class="collage-control" type="button" aria-label="Pause slideshow" aria-pressed="true">Pause</button>
                     </div>
-                    <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg" class="absolute inset-0 w-full h-full object-cover opacity-80" alt="Project 1" data-collage-fallback style="display:none" loading="lazy" decoding="async">
+                    <div class="collage-control" aria-label="See all in photos">See all in photos</div>
                     
                     <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
                         
@@ -1092,37 +1144,26 @@
                     <div class="scroll-thumb" data-scroll-thumb data-scroll-duration="8">
                         <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/e94599c213bf3c36d13405934d18be40ad7bf9a9/assets/project_01.png" class="scroll-img opacity-90 transition-all duration-700" alt="Website Design" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg'">
                     </div>
-                    <div class="absolute top-6 left-6 right-6 z-10">
-                        <div class="flex justify-between items-center">
-                            <div class="w-8 h-8 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="globe" class="lucide w-4 h-4"></svg>
-                            </div>
-                            <span class="text-[10px] text-white/80 font-mono bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">Web</span>
-                        </div>
-                    </div>
+                    
                     <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
                         <h3 class="text-xl font-semibold text-white">Website Design</h3>
                         <p class="text-xs text-gray-300 mt-1">Responsive sites, landing pages, and e‑commerce.</p>
                     </div>
                 </div>
 
-                <!-- Tall Card (Mobile) -->
-                <div class="md:col-span-1 md:row-span-2 rounded-3xl glass relative overflow-hidden group cursor-pointer fade-in delay-400 border border-black/5 shadow-sm">
-                    <div class="absolute inset-0 bg-gray-100"></div>
-                    <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-110 transition-all duration-700" alt="Mobile">
-                    
-                    <div class="absolute top-6 left-6 right-6 z-10">
-                        <div class="flex justify-between items-center">
-                            <div class="w-8 h-8 rounded-full bg-black/20 backdrop-blur flex items-center justify-center text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="smartphone" strokewidth="1.5" class="lucide lucide-smartphone w-4 h-4"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg>
-                            </div>
-                            <span class="text-[10px] text-white/80 font-mono bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">iOS / Android</span>
-                        </div>
+                
+
+                <!-- Video Thumbnails Slideshow -->
+                <div class="md:col-span-1 md:row-span-2 group relative rounded-3xl overflow-hidden bg-gray-900 border border-black/5 cursor-pointer fade-in delay-500 shadow-sm">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="collage absolute inset-0 group-hover:scale-105 transition-all duration-700 ease-out opacity-80" data-speed="10000" data-transition="500" aria-label="Video thumbnails collage" role="region" aria-roledescription="slideshow" aria-live="polite" tabindex="0" data-base="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/" data-images="videothumbnail_01.jpg, videothumbnail_02.jpg, videothumbnail_03.jpg">
+                        <div class="collage-layer active"><img alt="Video thumbnail" class="w-full h-full object-cover" /></div>
+                        <div class="collage-layer"><img alt="Video thumbnail" class="w-full h-full object-cover" /></div>
                     </div>
                     
                     <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/80 to-transparent pt-24">
-                        <h3 class="text-xl font-semibold text-white">Zen Focus</h3>
-                        <p class="text-xs text-gray-300 mt-1">Meditation &amp; Productivity.</p>
+                        <h3 class="text-xl font-semibold text-white">Video Edits</h3>
+                        <p class="text-xs text-gray-300 mt-1">Previews for video content.</p>
                     </div>
                 </div>
 
