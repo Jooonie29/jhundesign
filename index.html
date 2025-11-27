@@ -723,7 +723,7 @@
           if(p.kind==='video'){
             var vid = document.createElement('video');
             vid.src = p.src;
-            vid.preload = 'auto';
+            vid.preload = 'none';
             vid.muted = true;
             vid.playsInline = true;
             vid.controls = false;
@@ -772,7 +772,7 @@
             img.onerror = tryNext;
           }
           if(p.kind==='video'){ mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; }
-          else { mediaEl.alt = p.title; mediaEl.loading = 'eager'; mediaEl.decoding = 'sync'; mediaEl.fetchPriority = 'high'; mediaEl.sizes = '(min-width:1024px) 14vw, (min-width:640px) 22vw, 30vw'; mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; if(isGit){ var rawSrc = p.src; function fallToRaw(){ mediaEl.removeEventListener('error', fallToRaw); mediaEl.src = rawSrc; mediaEl.srcset = ''; } mediaEl.addEventListener('error', fallToRaw, { once: true }); setTimeout(function(){ if(!mediaEl.complete || !mediaEl.naturalWidth){ fallToRaw(); } }, 2000); } }
+          else { mediaEl.alt = p.title; mediaEl.loading = 'lazy'; mediaEl.decoding = 'async'; mediaEl.fetchPriority = 'low'; mediaEl.sizes = '(min-width:1024px) 14vw, (min-width:640px) 22vw, 30vw'; mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; if(isGit){ var rawSrc = p.src; function fallToRaw(){ mediaEl.removeEventListener('error', fallToRaw); mediaEl.src = rawSrc; mediaEl.srcset = ''; } mediaEl.addEventListener('error', fallToRaw, { once: true }); setTimeout(function(){ if(!mediaEl.complete || !mediaEl.naturalWidth){ fallToRaw(); } }, 2000); } }
           wrap.appendChild(mediaEl);
           if(p.kind==='video'){ wrap.appendChild(playBtn); }
           wrap.appendChild(skeleton);
@@ -997,9 +997,9 @@
           var btn = entry.target;
           var vid = btn.querySelector('video.photo-thumb');
           if(!vid) return;
-          if(entry.isIntersecting){ vid.preload = 'auto'; try { vid.load(); } catch(e){} }
+          if(entry.isIntersecting){ vid.preload = 'metadata'; try { vid.load(); } catch(e){} }
         });
-      }, { root: document.querySelector('.photos-scroll') || null, rootMargin: '200px', threshold: 0.1 });
+      }, { root: document.querySelector('.photos-scroll') || null, rootMargin: '300px', threshold: 0.1 });
       document.querySelectorAll('#photosGrid button[aria-label]').forEach(function(b){ ioGridMedia.observe(b); });
       window.addEventListener('resize', function(){
         thumbs.forEach(function(el){
@@ -1208,6 +1208,81 @@
       safariMinimize && safariMinimize.addEventListener('click', closeSafari);
       safariMaximize && safariMaximize.addEventListener('click', function(){ var rfs = safariWindow.requestFullscreen || safariWindow.webkitRequestFullscreen || safariWindow.msRequestFullscreen; if(rfs) rfs.call(safariWindow); });
       document.addEventListener('keydown', function(e){ if(!safariOverlay || safariOverlay.classList.contains('pointer-events-none')) return; if(e.key==='Escape'){ closeSafari(); } });
+      var mailOverlay = document.getElementById('mailOverlay');
+      var mailWindow = document.getElementById('mailWindow');
+      var mailClose = document.getElementById('mailClose');
+      var mailMinimize = document.getElementById('mailMinimize');
+      var mailMaximize = document.getElementById('mailMaximize');
+      var mailOpener = document.querySelector('[data-app="mail"]');
+      function openMail(){
+        mailOverlay.classList.remove('pointer-events-none');
+        mailOverlay.classList.add('opacity-100');
+        lockScroll();
+        renderMailDetail('msg-mark');
+        requestAnimationFrame(function(){
+          mailWindow.classList.remove('opacity-0');
+          mailWindow.classList.remove('scale-95');
+          mailWindow.classList.add('opacity-100');
+          mailWindow.classList.add('scale-100');
+        });
+        mailClose && mailClose.focus();
+      }
+      function closeMail(){
+        mailWindow.classList.remove('opacity-100');
+        mailWindow.classList.add('opacity-0');
+        mailWindow.classList.remove('scale-100');
+        mailWindow.classList.add('scale-95');
+        mailOverlay.classList.remove('opacity-100');
+        mailOverlay.classList.add('opacity-0');
+        setTimeout(function(){ mailOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+      }
+      mailOverlay && mailOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
+      mailOverlay && mailOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      mailWindow && mailWindow.addEventListener('wheel', function(e){ e.stopPropagation(); }, { passive: true });
+      mailWindow && mailWindow.addEventListener('touchmove', function(e){ e.stopPropagation(); }, { passive: true });
+      mailOpener && mailOpener.addEventListener('click', function(e){ e.preventDefault(); openMail(); });
+      mailClose && mailClose.addEventListener('click', closeMail);
+      mailMinimize && mailMinimize.addEventListener('click', closeMail);
+      mailMaximize && mailMaximize.addEventListener('click', function(){ var rfs = mailWindow.requestFullscreen || mailWindow.webkitRequestFullscreen || mailWindow.msRequestFullscreen; if(rfs) rfs.call(mailWindow); });
+      function renderMailDetail(id){ var c=document.getElementById('mailDetail'); var t=document.getElementById(id); if(!c||!t) return; c.innerHTML = t.outerHTML; }
+      mailWindow && mailWindow.addEventListener('click', function(e){ var b=e.target.closest('[data-target]'); if(!b) return; var id=b.getAttribute('data-target'); renderMailDetail(id); });
+      document.addEventListener('keydown', function(e){ if(!mailOverlay || mailOverlay.classList.contains('pointer-events-none')) return; if(e.key==='Escape'){ closeMail(); } });
+      var finderOverlay = document.getElementById('finderOverlay');
+      var finderWindow = document.getElementById('finderWindow');
+      var finderClose = document.getElementById('finderClose');
+      var finderMinimize = document.getElementById('finderMinimize');
+      var finderMaximize = document.getElementById('finderMaximize');
+      var finderOpener = document.querySelector('[data-app="finder"]');
+      function openFinder(){
+        finderOverlay.classList.remove('pointer-events-none');
+        finderOverlay.classList.add('opacity-100');
+        lockScroll();
+        requestAnimationFrame(function(){
+          finderWindow.classList.remove('opacity-0');
+          finderWindow.classList.remove('scale-95');
+          finderWindow.classList.add('opacity-100');
+          finderWindow.classList.add('scale-100');
+        });
+        finderClose && finderClose.focus();
+      }
+      function closeFinder(){
+        finderWindow.classList.remove('opacity-100');
+        finderWindow.classList.add('opacity-0');
+        finderWindow.classList.remove('scale-100');
+        finderWindow.classList.add('scale-95');
+        finderOverlay.classList.remove('opacity-100');
+        finderOverlay.classList.add('opacity-0');
+        setTimeout(function(){ finderOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+      }
+      finderOverlay && finderOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
+      finderOverlay && finderOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
+      finderWindow && finderWindow.addEventListener('wheel', function(e){ e.stopPropagation(); }, { passive: true });
+      finderWindow && finderWindow.addEventListener('touchmove', function(e){ e.stopPropagation(); }, { passive: true });
+      finderOpener && finderOpener.addEventListener('click', function(e){ e.preventDefault(); openFinder(); });
+      finderClose && finderClose.addEventListener('click', closeFinder);
+      finderMinimize && finderMinimize.addEventListener('click', closeFinder);
+      finderMaximize && finderMaximize.addEventListener('click', function(){ var rfs = finderWindow.requestFullscreen || finderWindow.webkitRequestFullscreen || finderWindow.msRequestFullscreen; if(rfs) rfs.call(finderWindow); });
+      document.addEventListener('keydown', function(e){ if(!finderOverlay || finderOverlay.classList.contains('pointer-events-none')) return; if(e.key==='Escape'){ closeFinder(); } });
     });
   </script>
   
@@ -1330,6 +1405,214 @@
                     <div class="w-12 h-12 rounded-2xl bg-white grid place-items-center text-gray-900 font-semibold">DB</div>
                     <div class="text-[12px] text-gray-700">Dropbox</div>
                   </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="mailOverlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+    <div id="mailWindow" class="app-window photos-window rounded-md w-[95vw] md:w-[80vw] lg:w-[70vw] h-[80vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform scale-95 opacity-0 transition duration-300 ease-out absolute overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="mail-title">
+      <div class="glass-effect"></div>
+      <div class="glass-tint"></div>
+      <div class="glass-shine"></div>
+      <div class="relative w-full h-full">
+        <div class="window-titlebar h-10 flex items-center px-3 select-none">
+          <div class="flex items-center gap-2">
+            <button type="button" id="mailClose" aria-label="Close" class="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-black/10"></button>
+            <button type="button" id="mailMinimize" aria-label="Minimize" class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-black/10"></button>
+            <button type="button" id="mailMaximize" aria-label="Enter Fullscreen" class="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-black/10"></button>
+          </div>
+          <div class="mx-auto text-[13px] font-medium text-gray-900" id="mail-title">Mail</div>
+        </div>
+        <div class="glass-content h-[calc(100%-40px)] w-full flex">
+          <aside class="photos-sidebar w-56 p-4 hidden sm:block">
+            <div class="text-[12px] text-gray-700 mb-3">Favorites</div>
+            <div class="grid gap-2">
+              <button type="button" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2"><span class="text-[12px]">Inbox</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Sent</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Drafts</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">VIPs</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Flagged</span></button>
+              <div class="text-[12px] text-gray-700 mt-4 mb-2">iCloud</div>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Mathew’s iPhone</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">iCloud Drive</span></button>
+            </div>
+          </aside>
+          <section class="w-72 sm:w-80 h-full overflow-auto border-r border-black/10" aria-label="Message List">
+            <div class="p-4">
+              <div class="text-[12px] text-gray-700 mb-2">Inbox</div>
+              <ul class="grid gap-2" aria-label="Messages">
+                <li>
+                  <button type="button" data-target="msg-mark" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">Mark Thompson</div>
+                      <div class="text-[11px] text-gray-500">9:41 AM</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">RE: Annual Marketing Report for 2020 Attached.</div>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" data-target="msg-amy" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 border border-gray-200 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">Amy Anderson</div>
+                      <div class="text-[11px] text-gray-500">7:29 AM</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">Meeting Invitation 18th Dec...</div>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" data-target="msg-figma" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 border border-gray-200 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">Figma Design</div>
+                      <div class="text-[11px] text-gray-500">Yesterday</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">Mark Commented on Your...</div>
+                  </button>
+                </li>
+              </ul>
+              <div class="text-[12px] text-gray-700 mt-4 mb-2">Client Testimonials</div>
+              <ul class="grid gap-2" aria-label="Testimonials">
+                <li>
+                  <button type="button" data-target="t-graphic" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">BrightWave Co.</div>
+                      <div class="text-[11px] text-gray-500">Aug 2024</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">Graphic Design • Social Media Campaign</div>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" data-target="t-web" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">NorthStar Logistics</div>
+                      <div class="text-[11px] text-gray-500">May 2024</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">Website Design • Corporate Redesign</div>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" data-target="t-video" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                    <div class="flex items-center justify-between">
+                      <div class="text-[12px] font-medium">Aurora Labs</div>
+                      <div class="text-[11px] text-gray-500">Sep 2024</div>
+                    </div>
+                    <div class="text-[12px] text-gray-700">Video Editing • Product Launch Reel</div>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </section>
+          <section class="flex-1 h-full overflow-auto" aria-label="Message Detail">
+            <div id="mailDetail" class="p-4 space-y-4"></div>
+            <div id="mailTemplates" class="hidden">
+              <div id="msg-mark" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">Mark Thompson</div>
+                  <div class="text-[11px] text-gray-500">9:41 AM • Annual Marketing Report</div>
+                </div>
+                <div class="text-[12px] text-gray-900">RE: Annual Marketing Report for 2020 Attached.</div>
+                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Thank you for your email. I really appreciate it.<br><br>I have taken a look at the <span class="font-medium">marketing report</span> and it looks strong.<br><br>Best,<br>Mark</p>
+              </div>
+              <div id="msg-amy" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">Amy Anderson</div>
+                  <div class="text-[11px] text-gray-500">7:29 AM • Meeting Invitation</div>
+                </div>
+                <div class="text-[12px] text-gray-900">Meeting Invitation 18th Dec</div>
+                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Inviting you to the design sync on Dec 18th. Agenda: campaign assets, timelines, deliverables.<br><br>Thanks,<br>Amy</p>
+              </div>
+              <div id="msg-figma" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">Figma Design</div>
+                  <div class="text-[11px] text-gray-500">Yesterday • Comment Update</div>
+                </div>
+                <div class="text-[12px] text-gray-900">Mark Commented on Your Prototype</div>
+                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Left notes on the homepage flow and spacing. Looks great overall—just a few tweaks before handoff.<br><br>—Figma Design Team</p>
+              </div>
+              <div id="t-graphic" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">BrightWave Co.</div>
+                  <div class="text-[11px] text-gray-500">Graphic Design • Aug 2024</div>
+                </div>
+                <div class="text-[12px] text-gray-700">Published with client permission</div>
+                <blockquote class="text-[12px] text-gray-900">“The social media graphics exceeded expectations. Your color strategy, typography, and export optimization drove a noticeable lift in engagement across Instagram and Facebook. Fantastic work.”</blockquote>
+              </div>
+              <div id="t-web" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">NorthStar Logistics</div>
+                  <div class="text-[11px] text-gray-500">Website Design • May 2024</div>
+                </div>
+                <div class="text-[12px] text-gray-700">Published with client permission</div>
+                <blockquote class="text-[12px] text-gray-900">“Our redesigned site looks premium and loads fast. The responsive layout and clear visual hierarchy improved demo requests within the first month. Thank you for the polished delivery.”</blockquote>
+              </div>
+              <div id="t-video" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="text-[12px] font-semibold text-gray-900">Aurora Labs</div>
+                  <div class="text-[11px] text-gray-500">Video Editing • Sep 2024</div>
+                </div>
+                <div class="text-[12px] text-gray-700">Published with client permission</div>
+                <blockquote class="text-[12px] text-gray-900">“Your pacing, color grading, and motion graphics made the launch reel feel cinematic while staying on brand. Deliverables were spotless and ready for all platforms.”</blockquote>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="finderOverlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+    <div id="finderWindow" class="app-window photos-window rounded-md w-[95vw] md:w-[80vw] lg:w-[70vw] h-[80vh] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform scale-95 opacity-0 transition duration-300 ease-out absolute overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="finder-title">
+      <div class="glass-effect"></div>
+      <div class="glass-tint"></div>
+      <div class="glass-shine"></div>
+      <div class="relative w-full h-full">
+        <div class="window-titlebar h-10 flex items-center px-3 select-none">
+          <div class="flex items-center gap-2">
+            <button type="button" id="finderClose" aria-label="Close" class="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-black/10"></button>
+            <button type="button" id="finderMinimize" aria-label="Minimize" class="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-black/10"></button>
+            <button type="button" id="finderMaximize" aria-label="Enter Fullscreen" class="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-black/10"></button>
+          </div>
+          <div class="mx-auto text-[13px] font-medium text-gray-900" id="finder-title">Finder</div>
+        </div>
+        <div class="glass-content h-[calc(100%-40px)] w-full flex">
+          <aside class="photos-sidebar w-56 p-4 hidden sm:block">
+            <div class="text-[12px] text-gray-700 mb-3">Favorites</div>
+            <div class="grid gap-2">
+              <button type="button" class="photos-pill px-3 py-2 rounded-lg bg-blue-600 text-white flex items-center gap-2"><span class="text-[12px]">AirDrop</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800"><span class="text-[12px]">Recents</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800"><span class="text-[12px]">Applications</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800"><span class="text-[12px]">Desktop</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800"><span class="text-[12px]">Documents</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800"><span class="text-[12px]">Downloads</span></button>
+            </div>
+          </aside>
+          <section class="flex-1 h-full overflow-auto" aria-label="Finder Content">
+            <div class="p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-[12px] font-semibold text-gray-900">Documents</div>
+                <div class="flex items-center gap-2">
+                  <button type="button" class="w-9 h-9 rounded-xl bg-white/80 border border-gray-300 text-gray-800 grid place-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="14" x="3" y="4" rx="2" ry="2"></rect><path d="M7 20h10"></path></svg></button>
+                  <button type="button" class="w-9 h-9 rounded-xl bg-white/80 border border-gray-300 text-gray-800 grid place-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 21V9"></path></svg></button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div class="grid gap-2 items-center text-center">
+                  <div class="w-16 h-16 rounded-2xl bg-white grid place-items-center border border-black/10"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
+                  <div class="text-[12px] text-gray-700">Report.pdf</div>
+                </div>
+                <div class="grid gap-2 items-center text-center">
+                  <div class="w-16 h-16 rounded-2xl bg-white grid place-items-center border border-black/10"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"></path></svg></div>
+                  <div class="text-[12px] text-gray-700">Presentation.key</div>
+                </div>
+                <div class="grid gap-2 items-center text-center">
+                  <div class="w-16 h-16 rounded-2xl bg-white grid place-items-center border border-black/10"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l3 3h6a2 2 0 0 1 2 2z"></path></svg></div>
+                  <div class="text-[12px] text-gray-700">Designs</div>
+                </div>
+                <div class="grid gap-2 items-center text-center">
+                  <div class="w-16 h-16 rounded-2xl bg-white grid place-items-center border border-black/10"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"></path><path d="M3 4h18"></path><path d="M9 4v16"></path><path d="M15 4v16"></path></svg></div>
+                  <div class="text-[12px] text-gray-700">Photos</div>
                 </div>
               </div>
             </div>
@@ -1710,12 +1993,12 @@
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Photos</div>
             </a>
 
-            <a href="mailto:hello@jhunly.com" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="mail">
+            <button type="button" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="mail">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
                     <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Mail.png" alt="Mail" class="dock-img" loading="lazy" decoding="async">
                 </div>
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Mail</div>
-            </a>
+            </button>
 
             <button type="button" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="safari">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
@@ -1724,12 +2007,12 @@
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Safari</div>
             </button>
 
-            <a href="#work" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="finder">
+            <button type="button" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="finder">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
                     <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/Finder.png" alt="Finder" class="dock-img" loading="lazy" decoding="async">
                 </div>
                 <div class="dock-tooltip bg-white text-gray-900 text-[11px] font-medium py-1 px-3 rounded-lg border border-black/5 shadow-md backdrop-blur">Finder</div>
-            </a>
+            </button>
 
             <a href="#contact" class="dock-icon w-[50px] h-[50px] relative group cursor-pointer" data-app="settings">
                 <div class="w-full h-full rounded-[14px] overflow-hidden">
