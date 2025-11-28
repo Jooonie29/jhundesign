@@ -37,8 +37,8 @@
                 }
             }
         }
-    </script>
-    <style>
+      </script>
+      <style>
         body {
             background-color: #ffffff;
             color: #111827;
@@ -187,14 +187,22 @@
         @media (prefers-reduced-motion: reduce) { .scrolling .scroll-img { animation: none !important; transform: translate3d(0,0,0) !important; } }
         .photos-window { 
             background-color: rgba(255, 255, 255, 0.89);
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
             border: 1px solid rgba(255,255,255,0.7);
-            box-shadow: 0 0 6px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.25), inset -3px -3px 0.5px -3px rgba(255,255,255,0.18), inset 1px 1px 1px -0.5px rgba(255,255,255,0.35), inset -1px -1px 1px -0.5px rgba(255,255,255,0.2), inset 0 0 6px 6px rgba(255,255,255,0.06), inset 0 0 2px 2px rgba(255,255,255,0.03), 0 0 12px rgba(0,0,0,0.1) }
+            box-shadow: 0 0 6px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(255,255,255,0.25), inset -3px -3px 0.5px -3px rgba(255,255,255,0.18), inset 1px 1px 1px -0.5px rgba(255,255,255,0.35), inset -1px -1px 1px -0.5px rgba(255,255,255,0.2), inset 0 0 6px 6px rgba(255,255,255,0.06), inset 0 0 2px 2px rgba(255,255,255,0.03), 0 0 12px rgba(0,0,0,0.1);
+            transition: backdrop-filter 240ms ease, -webkit-backdrop-filter 240ms ease;
+            will-change: backdrop-filter, opacity, transform;
+        }
+        .photos-window.is-open { backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); }
+        @supports not (backdrop-filter: blur(1px)) { .photos-window.is-open { background-color: rgba(255,255,255,0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.12); } }
         .photos-sidebar { position: relative; border-right: 1px solid rgba(255,255,255,0.24); overflow-y: auto; max-height: 100%; }
         .photos-pill { transition: all 160ms ease; }
         
         .photos-list button { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; min-height: 40px; padding: 8px 12px; font-size: 12px; }
+        .photo-thumb { opacity: 0; transition: opacity 220ms ease; }
+        .photo-thumb.loaded { opacity: 1; }
+        .thumb-skeleton { position: absolute; inset: 0; background: rgba(0,0,0,0.06); }
         .photos-list svg { width: 16px; height: 16px; }
         .mobile-categories { display: none; }
         @media (max-width: 767px) {
@@ -205,12 +213,12 @@
           .photos-list button { min-height: 44px; padding: 10px 14px; }
           .photos-list span { font-size: 12px; }
         }
-        @media (min-width: 768px) and (max-width: 1199px) {
+        @media (min-width: 769px) and (max-width: 1024px) {
           .photos-sidebar { width: 220px; }
           .photos-list button { min-height: 42px; }
           .photos-list span { font-size: 12px; }
         }
-        @media (min-width: 1200px) {
+        @media (min-width: 1025px) {
           .photos-list button { min-height: 44px; }
           .photos-list span { font-size: 13px; }
         }
@@ -434,9 +442,9 @@
       var assetBaseLocal = assetBaseRemote;
       var scanCache = {}; var scanPromises = {}; var SCAN_TTL = 5*60*1000;
       function isRemoteGit(u){ return /^https?:\/\/(raw\.githubusercontent\.com|cdn\.jsdelivr\.net)/.test(u); }
-      function makeOptimized(u, w, fmt){ var f = fmt || 'webp'; return '/_optimized/?src=' + encodeURIComponent(u) + '&w=' + w + '&fmt=' + f; }
-      function getOptimSrc(u, w){ return isRemoteGit(u) ? makeOptimized(u, w) : u; }
-      function getOptimSrcset(u){ if(isRemoteGit(u)) return (makeOptimized(u,480)+' 480w, '+makeOptimized(u,768)+' 768w, '+makeOptimized(u,1080)+' 1080w'); return ''; }
+      function makeOptimized(u, w, fmt){ var f = fmt || 'webp'; var abs = /^https?:\//.test(u) ? u : (new URL(u, window.location.origin)).href; return '/_optimized/?src=' + encodeURIComponent(abs) + '&w=' + w + '&fmt=' + f + '&q=0.72'; }
+      function getOptimSrc(u, w){ return makeOptimized(u, w); }
+      function getOptimSrcset(u){ return (makeOptimized(u,480)+' 480w, '+makeOptimized(u,640)+' 640w, '+makeOptimized(u,800)+' 800w'); }
       // Image path structure (GitHub raw):
       // social-media-graphics/: Socialmedia_##.jpg/png
       // ecommerce-graphics/: Ecommerce_##.jpg/png
@@ -450,9 +458,12 @@
         content: { path: remoteAssetsBase, remote: 'https://cdn.jsdelivr.net/gh/JHUN062901/Portfolio@main/assets', files: [], prefix: 'Content_##', scan: true }
       };
       ['social','ecommerce','web','content'].forEach(function(k){ scanGallery(k).then(function(files){ categories[k].files = files; }); });
-      var scrollLock = { x: 0, y: 0, locked: false };
+      var scrollLock = { x: 0, y: 0, locked: false, count: 0 };
+      function setSmooth(enabled){ try { document.documentElement.style.scrollBehavior = enabled ? 'smooth' : 'auto'; } catch(e){} }
       function lockScroll(){
+        scrollLock.count = (scrollLock.count||0) + 1;
         if(scrollLock.locked) return;
+        setSmooth(false);
         scrollLock.x = window.scrollX || 0;
         scrollLock.y = window.scrollY || 0;
         var sbw = window.innerWidth - document.documentElement.clientWidth;
@@ -468,7 +479,10 @@
         scrollLock.locked = true;
       }
       function unlockScroll(){
+        scrollLock.count = Math.max(0, (scrollLock.count||0) - 1);
+        if(scrollLock.count>0) return;
         if(!scrollLock.locked) return;
+        var x = scrollLock.x, y = scrollLock.y;
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.left = '';
@@ -478,8 +492,9 @@
         document.documentElement.classList.remove('scroll-locked');
         document.body.classList.remove('scroll-locked');
         document.body.classList.remove('scroll-lock-transition');
-        window.scrollTo(scrollLock.x, scrollLock.y);
+        try { window.scrollTo({ left: x, top: y, behavior: 'auto' }); } catch(e) { window.scrollTo(x, y); }
         scrollLock.locked = false;
+        setSmooth(true);
       }
       function scanGallery(cat){
         var now = Date.now();
@@ -539,7 +554,7 @@
           function enumerateByPrefix(){
             var base = c.remote || (assetBaseRemote.replace(/\/$/, '') + '/assets');
             var names = [];
-            var max = 50;
+            var max = 20;
             if(cat==='web'){
               for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('Web_'+n+'.'+ext); }); }
             } else if(cat==='social'){
@@ -549,8 +564,24 @@
             } else if(cat==='content'){
               for(var i=1;i<=max;i++){ var n=('0'+i).slice(-2); ['jpg','jpeg','png','gif'].forEach(function(ext){ names.push('content_'+n+'.'+ext); }); ['mp4','webm','mov','avi'].forEach(function(ext){ names.push('Content_'+n+'.'+ext); }); }
             }
-            var checks = names.map(function(fname){ var url = base + '/' + fname; return fetch(url, { method: 'HEAD', cache: 'no-store', mode: 'cors' }).then(function(r){ return (r && r.ok) ? fname : null; }).catch(function(){ return null; }); });
-            return Promise.all(checks).then(function(arr){ return arr.filter(function(x){ return !!x; }); });
+            function headWithTimeout(url, ms){
+              return function(){
+                var ctl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+                var timer = setTimeout(function(){ if(ctl) ctl.abort(); }, ms||1200);
+                return fetch(url, { method: 'HEAD', cache: 'no-store', mode: 'cors', signal: ctl?ctl.signal:undefined })
+                  .then(function(r){ clearTimeout(timer); return (r && r.ok) ? url.split('/').pop() : null; })
+                  .catch(function(){ clearTimeout(timer); return null; });
+              };
+            }
+            var checks = names.map(function(fname){ var url = base + '/' + fname; return headWithTimeout(url, 1200); });
+            var limit = 4, i = 0, active = 0, out = [];
+            return new Promise(function(resolve){
+              function next(){
+                if(i>=checks.length && active===0){ resolve(out); return; }
+                while(active<limit && i<checks.length){ var fn = checks[i++]; active++; fn().then(function(v){ if(v) out.push(v); }).finally(function(){ active--; next(); }); }
+              }
+              next();
+            });
           }
           Promise.resolve().then(function(){ return fromGithub(); }).catch(function(){ return []; })
             .then(function(list){ if(list && list.length) return list; return Promise.resolve().then(function(){ return fromJsDelivr(); }).catch(function(){ return []; }); })
@@ -772,7 +803,7 @@
             img.onerror = tryNext;
           }
           if(p.kind==='video'){ mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; }
-          else { mediaEl.alt = p.title; mediaEl.loading = 'lazy'; mediaEl.decoding = 'async'; mediaEl.fetchPriority = 'low'; mediaEl.sizes = '(min-width:1024px) 14vw, (min-width:640px) 22vw, 30vw'; mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; if(isGit){ var rawSrc = p.src; function fallToRaw(){ mediaEl.removeEventListener('error', fallToRaw); mediaEl.src = rawSrc; mediaEl.srcset = ''; } mediaEl.addEventListener('error', fallToRaw, { once: true }); setTimeout(function(){ if(!mediaEl.complete || !mediaEl.naturalWidth){ fallToRaw(); } }, 2000); } }
+          else { mediaEl.alt = p.title; mediaEl.loading = 'lazy'; mediaEl.decoding = 'async'; mediaEl.fetchPriority = 'low'; mediaEl.sizes = '(min-width:1024px) 14vw, (min-width:640px) 22vw, 30vw'; mediaEl.width = 400; mediaEl.height = 300; mediaEl.className = 'photo-thumb w-full h-28 sm:h-32 md:h-36 object-cover'; var rawSrc = p.src; function fallToRaw(){ mediaEl.removeEventListener('error', fallToRaw); mediaEl.src = rawSrc; mediaEl.srcset = ''; } mediaEl.addEventListener('error', fallToRaw, { once: true }); setTimeout(function(){ if(!mediaEl.complete || !mediaEl.naturalWidth){ fallToRaw(); } }, 2000); }
           wrap.appendChild(mediaEl);
           if(p.kind==='video'){ wrap.appendChild(playBtn); }
           wrap.appendChild(skeleton);
@@ -802,6 +833,7 @@
           windowEl.classList.remove('scale-95');
           windowEl.classList.add('opacity-100');
           windowEl.classList.add('scale-100');
+          windowEl.classList.add('is-open');
         });
         closeBtn && closeBtn.focus();
       }
@@ -812,7 +844,10 @@
         windowEl.classList.add('scale-95');
         overlay.classList.remove('opacity-100');
         overlay.classList.add('opacity-0');
-        setTimeout(function(){ overlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+        windowEl.classList.remove('is-open');
+        function onEnd(e){ if(e && e.target!==overlay) return; overlay.classList.add('pointer-events-none'); unlockScroll(); }
+        overlay.addEventListener('transitionend', onEnd, { once: true });
+        setTimeout(function(){ if(!overlay.classList.contains('pointer-events-none')) { overlay.classList.add('pointer-events-none'); unlockScroll(); } }, 400);
       }
       function showViewer(index){
         currentIndex = index;
@@ -931,6 +966,9 @@
         if(e.key==='ArrowRight') next();
         if(e.key==='ArrowLeft') prev();
       });
+      function debounce(fn, wait){ var t; return function(){ var self=this, args=arguments; clearTimeout(t); t=setTimeout(function(){ fn.apply(self,args); }, wait||160); }; }
+      var onResize = debounce(function(){ }, 180);
+      window.addEventListener('resize', onResize, { passive: true });
       if(opener){
         opener.setAttribute('role','button');
         opener.setAttribute('aria-label','Open Photos');
@@ -946,12 +984,15 @@
       var thumbs = document.querySelectorAll('[data-scroll-thumb]');
       if(window.PerformanceObserver){
         try{
-          var resObs = new PerformanceObserver(function(list){
-            list.getEntries().forEach(function(e){ if(/\.(jpg|jpeg|png|webp|avif)$/i.test(e.name)){ /* no-op */ } });
-          });
-          resObs.observe({ type: 'resource', buffered: true });
-          var lcpObs = new PerformanceObserver(function(list){ list.getEntries().forEach(function(e){ /* no-op */ }); });
+          var metrics = { cls: 0, lcp: 0, fid: 0 };
+          var lsObs = new PerformanceObserver(function(list){ list.getEntries().forEach(function(e){ if(!e.hadRecentInput) metrics.cls += e.value; }); });
+          lsObs.observe({ type: 'layout-shift', buffered: true });
+          var lcpObs = new PerformanceObserver(function(list){ var e=list.getEntries().pop(); if(e) metrics.lcp = Math.max(metrics.lcp, e.startTime||0); });
           lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+          var fidObs = new PerformanceObserver(function(list){ var e=list.getEntries()[0]; if(e) metrics.fid = (e.processingStart||0) - (e.startTime||0); });
+          fidObs.observe({ type: 'first-input', buffered: true });
+          window.__rum = metrics;
+          window.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden'){ try { console.log('RUM', metrics); } catch(e){} } });
         } catch(e){}
       }
       var io = new IntersectionObserver(function(entries){
@@ -1164,7 +1205,9 @@
         settingsWindow.classList.add('scale-95');
         settingsOverlay.classList.remove('opacity-100');
         settingsOverlay.classList.add('opacity-0');
-        setTimeout(function(){ settingsOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+        function onEnd(e){ if(e && e.target!==settingsOverlay) return; settingsOverlay.classList.add('pointer-events-none'); unlockScroll(); }
+        settingsOverlay.addEventListener('transitionend', onEnd, { once: true });
+        setTimeout(function(){ if(!settingsOverlay.classList.contains('pointer-events-none')) { settingsOverlay.classList.add('pointer-events-none'); unlockScroll(); } }, 400);
       }
       settingsOpener && settingsOpener.addEventListener('click', function(e){ e.preventDefault(); openSettings(); });
       settingsClose && settingsClose.addEventListener('click', closeSettings);
@@ -1197,7 +1240,9 @@
         safariWindow.classList.add('scale-95');
         safariOverlay.classList.remove('opacity-100');
         safariOverlay.classList.add('opacity-0');
-        setTimeout(function(){ safariOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+        function onEndS(e){ if(e && e.target!==safariOverlay) return; safariOverlay.classList.add('pointer-events-none'); unlockScroll(); }
+        safariOverlay.addEventListener('transitionend', onEndS, { once: true });
+        setTimeout(function(){ if(!safariOverlay.classList.contains('pointer-events-none')) { safariOverlay.classList.add('pointer-events-none'); unlockScroll(); } }, 400);
       }
       safariOverlay && safariOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
       safariOverlay && safariOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
@@ -1234,7 +1279,9 @@
         mailWindow.classList.add('scale-95');
         mailOverlay.classList.remove('opacity-100');
         mailOverlay.classList.add('opacity-0');
-        setTimeout(function(){ mailOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+        function onEndM(e){ if(e && e.target!==mailOverlay) return; mailOverlay.classList.add('pointer-events-none'); unlockScroll(); }
+        mailOverlay.addEventListener('transitionend', onEndM, { once: true });
+        setTimeout(function(){ if(!mailOverlay.classList.contains('pointer-events-none')) { mailOverlay.classList.add('pointer-events-none'); unlockScroll(); } }, 400);
       }
       mailOverlay && mailOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
       mailOverlay && mailOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
@@ -1272,7 +1319,9 @@
         finderWindow.classList.add('scale-95');
         finderOverlay.classList.remove('opacity-100');
         finderOverlay.classList.add('opacity-0');
-        setTimeout(function(){ finderOverlay.classList.add('pointer-events-none'); unlockScroll(); }, 250);
+        function onEndF(e){ if(e && e.target!==finderOverlay) return; finderOverlay.classList.add('pointer-events-none'); unlockScroll(); }
+        finderOverlay.addEventListener('transitionend', onEndF, { once: true });
+        setTimeout(function(){ if(!finderOverlay.classList.contains('pointer-events-none')) { finderOverlay.classList.add('pointer-events-none'); unlockScroll(); } }, 400);
       }
       finderOverlay && finderOverlay.addEventListener('wheel', preventScrollEvent, { passive: false });
       finderOverlay && finderOverlay.addEventListener('touchmove', preventScrollEvent, { passive: false });
@@ -1437,7 +1486,7 @@
               <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">VIPs</span></button>
               <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Flagged</span></button>
               <div class="text-[12px] text-gray-700 mt-4 mb-2">iCloud</div>
-              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">Mathew’s iPhone</span></button>
+              <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">jhunly’s iPhone</span></button>
               <button type="button" class="px-3 py-2 rounded-lg bg-white/80 border border-gray-300 text-gray-800 flex items-center gap-2"><span class="text-[12px]">iCloud Drive</span></button>
             </div>
           </aside>
@@ -1472,91 +1521,88 @@
                     <div class="text-[12px] text-gray-700">Mark Commented on Your...</div>
                   </button>
                 </li>
-              </ul>
-              <div class="text-[12px] text-gray-700 mt-4 mb-2">Client Testimonials</div>
-              <ul class="grid gap-2" aria-label="Testimonials">
                 <li>
-                  <button type="button" data-target="t-graphic" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                  <button type="button" data-target="msg-brightwave" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 border border-gray-200 text-gray-900">
                     <div class="flex items-center justify-between">
                       <div class="text-[12px] font-medium">BrightWave Co.</div>
-                      <div class="text-[11px] text-gray-500">Aug 2024</div>
+                      <div class="text-[11px] text-gray-500">Yesterday</div>
                     </div>
-                    <div class="text-[12px] text-gray-700">Graphic Design • Social Media Campaign</div>
+                    <div class="text-[12px] text-gray-700">Loved the campaign visuals</div>
                   </button>
                 </li>
                 <li>
-                  <button type="button" data-target="t-web" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                  <button type="button" data-target="msg-northstar" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 border border-gray-200 text-gray-900">
                     <div class="flex items-center justify-between">
                       <div class="text-[12px] font-medium">NorthStar Logistics</div>
-                      <div class="text-[11px] text-gray-500">May 2024</div>
+                      <div class="text-[11px] text-gray-500">Mon</div>
                     </div>
-                    <div class="text-[12px] text-gray-700">Website Design • Corporate Redesign</div>
+                    <div class="text-[12px] text-gray-700">Website redesign feedback</div>
                   </button>
                 </li>
                 <li>
-                  <button type="button" data-target="t-video" class="w-full text-left px-3 py-2 rounded-xl bg-white/80 border border-gray-300 text-gray-900">
+                  <button type="button" data-target="msg-aurora" class="w-full text-left px-3 py-2 rounded-xl bg-white/70 border border-gray-200 text-gray-900">
                     <div class="flex items-center justify-between">
                       <div class="text-[12px] font-medium">Aurora Labs</div>
-                      <div class="text-[11px] text-gray-500">Sep 2024</div>
+                      <div class="text-[11px] text-gray-500">Sep 24</div>
                     </div>
-                    <div class="text-[12px] text-gray-700">Video Editing • Product Launch Reel</div>
+                    <div class="text-[12px] text-gray-700">Launch reel was outstanding</div>
                   </button>
                 </li>
               </ul>
-            </div>
+              </div>
           </section>
           <section class="flex-1 h-full overflow-auto" aria-label="Message Detail">
             <div id="mailDetail" class="p-4 space-y-4"></div>
-            <div id="mailTemplates" class="hidden">
-              <div id="msg-mark" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">Mark Thompson</div>
-                  <div class="text-[11px] text-gray-500">9:41 AM • Annual Marketing Report</div>
+              <div id="mailTemplates" class="hidden">
+                <div id="msg-mark" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">Mark Thompson</div>
+                    <div class="text-[11px] text-gray-500">9:41 AM • Annual Marketing Report</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">RE: Annual Marketing Report for 2020 Attached.</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>Thank you for your email. I really appreciate it.<br><br>I have taken a look at the <span class="font-medium">marketing report</span> and it looks strong.<br><br>Best,<br>Mark</p>
                 </div>
-                <div class="text-[12px] text-gray-900">RE: Annual Marketing Report for 2020 Attached.</div>
-                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Thank you for your email. I really appreciate it.<br><br>I have taken a look at the <span class="font-medium">marketing report</span> and it looks strong.<br><br>Best,<br>Mark</p>
-              </div>
-              <div id="msg-amy" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">Amy Anderson</div>
-                  <div class="text-[11px] text-gray-500">7:29 AM • Meeting Invitation</div>
+                <div id="msg-amy" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">Amy Anderson</div>
+                    <div class="text-[11px] text-gray-500">7:29 AM • Meeting Invitation</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">Meeting Invitation 18th Dec</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>Inviting you to the design sync on Dec 18th. Agenda: campaign assets, timelines, deliverables.<br><br>Thanks,<br>Amy</p>
                 </div>
-                <div class="text-[12px] text-gray-900">Meeting Invitation 18th Dec</div>
-                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Inviting you to the design sync on Dec 18th. Agenda: campaign assets, timelines, deliverables.<br><br>Thanks,<br>Amy</p>
-              </div>
-              <div id="msg-figma" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">Figma Design</div>
-                  <div class="text-[11px] text-gray-500">Yesterday • Comment Update</div>
+                <div id="msg-figma" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">Website Design</div>
+                    <div class="text-[11px] text-gray-500">Yesterday • Comment Update</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">Mark Commented on Your Prototype</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>Left notes on the homepage flow and spacing. Looks great overall—just a few tweaks before handoff.<br><br>—Your Digital Team</p>
                 </div>
-                <div class="text-[12px] text-gray-900">Mark Commented on Your Prototype</div>
-                <p class="text-[12px] text-gray-800">Hi Mathew,<br><br>Left notes on the homepage flow and spacing. Looks great overall—just a few tweaks before handoff.<br><br>—Figma Design Team</p>
-              </div>
-              <div id="t-graphic" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">BrightWave Co.</div>
-                  <div class="text-[11px] text-gray-500">Graphic Design • Aug 2024</div>
+                <div id="msg-brightwave" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">BrightWave Co.</div>
+                    <div class="text-[11px] text-gray-500">Yesterday • Campaign Results</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">Loved the social graphics for Q3 launch</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>The visuals you designed matched our brand perfectly and lifted engagement across Instagram. Color choices, type, and export quality were spot on.<br><br>Thanks again—our team is thrilled.<br><br>—BrightWave Marketing</p>
                 </div>
-                <div class="text-[12px] text-gray-700">Published with client permission</div>
-                <blockquote class="text-[12px] text-gray-900">“The social media graphics exceeded expectations. Your color strategy, typography, and export optimization drove a noticeable lift in engagement across Instagram and Facebook. Fantastic work.”</blockquote>
-              </div>
-              <div id="t-web" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">NorthStar Logistics</div>
-                  <div class="text-[11px] text-gray-500">Website Design • May 2024</div>
+                <div id="msg-northstar" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">NorthStar Logistics</div>
+                    <div class="text-[11px] text-gray-500">Mon • Website Redesign</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">The new site looks premium and fast</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>We’re impressed by the clean layout, responsive behavior, and performance. Demo requests are already up and our leadership loved the polish.<br><br>Appreciate the smooth handoff.<br><br>—Mia, Marketing</p>
                 </div>
-                <div class="text-[12px] text-gray-700">Published with client permission</div>
-                <blockquote class="text-[12px] text-gray-900">“Our redesigned site looks premium and loads fast. The responsive layout and clear visual hierarchy improved demo requests within the first month. Thank you for the polished delivery.”</blockquote>
-              </div>
-              <div id="t-video" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-2">
-                <div class="flex items-center justify-between">
-                  <div class="text-[12px] font-semibold text-gray-900">Aurora Labs</div>
-                  <div class="text-[11px] text-gray-500">Video Editing • Sep 2024</div>
+                <div id="msg-aurora" class="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-4 grid gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[12px] font-semibold text-gray-900">Aurora Labs</div>
+                    <div class="text-[11px] text-gray-500">Sep 24 • Product Launch</div>
+                  </div>
+                  <div class="text-[12px] text-gray-900">Launch reel was outstanding</div>
+                  <p class="text-[12px] text-gray-800">Hi jhunly,<br><br>The pacing, grading, and motion graphics felt cinematic while staying on brand. Execs called it the best launch video we’ve produced.<br><br>Thank you for the excellence.<br><br>—Aurora Labs Team</p>
                 </div>
-                <div class="text-[12px] text-gray-700">Published with client permission</div>
-                <blockquote class="text-[12px] text-gray-900">“Your pacing, color grading, and motion graphics made the launch reel feel cinematic while staying on brand. Deliverables were spotless and ready for all platforms.”</blockquote>
               </div>
-            </div>
           </section>
         </div>
       </div>
@@ -1637,7 +1683,7 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></span>
-                <span class="text-gray-500 hidden sm:inline">Online</span>
+                <span class="text-gray-500 hidden sm:inline">Available for Work</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" strokewidth="1.5" class="lucide lucide-wifi w-3.5 h-3.5 text-gray-600"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
@@ -1722,11 +1768,6 @@
                                 <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Discovery</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Moodboards</span></div>
                                 <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Concept</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Iteration</span></div>
                                 <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Production</span><span class="text-white/60">→</span><span class="px-2 py-0.5 rounded-md bg-white/15 border border-white/20">Delivery</span></div>
-                            </div>
-                            <div class="mt-3 flex items-center gap-4 text-[11px] text-white/90">
-                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="award" class="w-3.5 h-3.5"><path d="M12 8a5 5 0 1 0 0 10 5 5 0 0 0 0-10"></path><path d="M12 2v4"></path><path d="m2 12h4"></path><path d="m18 12h4"></path><path d="M12 22v-4"></path></svg><span>Awards 4</span></div>
-                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" class="w-3.5 h-3.5"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Clients 18</span></div>
-                                <div class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="flag" class="w-3.5 h-3.5"><path d="M4 4v16"></path><path d="M4 4h16l-4 4 4 4H4"></path></svg><span>Campaigns 26</span></div>
                             </div>
                             <div class="mt-3 flex gap-2 overflow-x-auto pr-2">
                                 <img src="https://raw.githubusercontent.com/JHUN062901/Portfolio/main/assets/poster_01.jpg" alt="Poster preview" class="w-16 h-16 object-cover rounded-lg shadow-sm hover:scale-105 transition" loading="lazy" decoding="async" onerror="this.src='https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg'">
